@@ -910,56 +910,68 @@ def build_3d_trajectory(data: Dict, color_by: str = 'speed') -> go.Figure:
     return fig
 
 
-def compute_map_zoom(lats: List[float], lons: List[float]) -> float:
+# Padding around the GPS path when framing the 2D map: 20% of trajectory span per axis
+# (10% margin on each side of the north–south and east–west extent).
+MAP_TRAJECTORY_PADDING_FRAC = 0.2
+
+
+def compute_map_view_from_trajectory(
+    lats: List[float],
+    lons: List[float],
+    width_px: float = 960.0,
+    height_px: float = 600.0,
+    padding_frac: float = MAP_TRAJECTORY_PADDING_FRAC,
+) -> Tuple[float, float, float]:
     """
-    Estimate appropriate Mapbox zoom level to fit the entire trajectory in view.
-    
-    Calculates zoom level from bounding box dimensions using proper Mercator projection.
-    
-    Args:
-        lats: List of latitude values (degrees)
-        lons: List of longitude values (degrees)
-        
-    Returns:
-        Zoom level clamped to [10, 20]
+    Center and zoom for ``layout.map`` so the view fits takeoff → landing path
+    (all valid GPS points) with extra margin: ``padding_frac`` × trajectory span
+    on each side (north/south and east/west).
+
+    Takeoff / landing are ``lats[0], lons[0]`` and ``lats[-1], lons[-1]``; the
+    bounding box uses min/max over the full trajectory so detours stay in frame.
     """
     if len(lats) < 2 or len(lons) < 2:
-        return 16.0
-    
-    lat_min, lat_max = min(lats), max(lats)
-    lon_min, lon_max = min(lons), max(lons)
-    
+        return (float(lats[0]), float(lons[0]), 16.0)
+
+    lat_to, lon_to = lats[0], lons[0]
+    lat_ld, lon_ld = lats[-1], lons[-1]
+
+    lat_min_raw, lat_max_raw = min(lats), max(lats)
+    lon_min_raw, lon_max_raw = min(lons), max(lons)
+
+    lat_span = lat_max_raw - lat_min_raw
+    lon_span = lon_max_raw - lon_min_raw
+
+    if lat_span < 1e-9 and lon_span < 1e-9:
+        return ((lat_to + lat_ld) / 2.0, (lon_to + lon_ld) / 2.0, 17.0)
+
+    # Degenerate line: inflate so zoom math is stable
+    if lat_span < 0.0001:
+        lat_span = 0.01
+    if lon_span < 0.0001:
+        lon_span = 0.01
+
+    dlat = padding_frac * lat_span
+    dlon = padding_frac * lon_span
+
+    lat_min = lat_min_raw - dlat
+    lat_max = lat_max_raw + dlat
+    lon_min = lon_min_raw - dlon
+    lon_max = lon_max_raw + dlon
+
     lat_range = lat_max - lat_min
     lon_range = lon_max - lon_min
-    
-    # If stationary (no movement), zoom closer
-    if lat_range < 0.0001 and lon_range < 0.0001:
-        return 17.0
-    
-    # If only slight movement in one direction
-    if lat_range < 0.0001:
-        lat_range = 0.01
-    if lon_range < 0.0001:
-        lon_range = 0.01
-    
-    # Add 20% padding
-    lat_range *= 1.2
-    lon_range *= 1.2
-    
-    # Calculate zoom for latitude (simpler)
-    # log2(256 / lat_range) gives zoom where 256 pixels = lat_range degrees
-    zoom_lat = math.log2(256.0 / lat_range)
-    
-    # Calculate zoom for longitude (accounting for latitude)
-    center_lat_rad = math.radians((lat_min + lat_max) / 2.0)
-    pixels_per_degree_lon = 256.0 * math.cos(center_lat_rad)
-    zoom_lon = math.log2(pixels_per_degree_lon / lon_range)
-    
-    # Use the smaller zoom (shows more area) to fit both dimensions
-    zoom = min(zoom_lat, zoom_lon)
-    
-    # Clamp to valid Mapbox range
-    return max(10.0, min(20.0, zoom))
+
+    lat_center = (lat_min + lat_max) / 2.0
+    lon_center = (lon_min + lon_max) / 2.0
+    cos_lat = max(math.cos(math.radians(lat_center)), 0.2)
+
+    zoom_lon = math.log2(360.0 * width_px * cos_lat / (256.0 * lon_range))
+    zoom_lat = math.log2(180.0 * height_px / (256.0 * lat_range))
+    zoom = min(zoom_lon, zoom_lat)
+
+    zoom = max(8.0, min(20.0, zoom))
+    return (lat_center, lon_center, zoom)
 
 
 def build_2d_map_panel(data: Dict, color_by: str = 'speed') -> go.Figure:
@@ -1020,11 +1032,8 @@ def build_2d_map_panel(data: Dict, color_by: str = 'speed') -> go.Figure:
         colorscale = 'Turbo'
         colorbar_title = "Time (normalized)"
     
-    # Compute map center and zoom
-    # Center on bounding box midpoint for better framing
-    lat_center = (min(lats) + max(lats)) / 2.0
-    lon_center = (min(lons) + max(lons)) / 2.0
-    zoom = compute_map_zoom(lats, lons)
+    # Frame takeoff → full trajectory → landing, plus MAP_TRAJECTORY_PADDING_FRAC of span per side
+    lat_center, lon_center, zoom = compute_map_view_from_trajectory(lats, lons)
     
     fig = go.Figure()
     
@@ -1103,10 +1112,10 @@ def build_2d_map_panel(data: Dict, color_by: str = 'speed') -> go.Figure:
     
     fig.update_layout(
         title="Flight Trajectory — Real World GPS",
-        mapbox=dict(
+        map=dict(
             style="open-street-map",
             center=dict(lat=lat_center, lon=lon_center),
-            zoom=zoom
+            zoom=zoom,
         ),
         margin=dict(l=0, r=0, t=40, b=0),
         height=600,

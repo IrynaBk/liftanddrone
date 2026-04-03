@@ -88,10 +88,15 @@ def inject_global_css():
         border-radius: 12px;
     }
 
-    /* Divider styling */
+    /* Divider styling (tighter vertical rhythm than default) */
     hr {
         border-color: #1e2535;
-        margin: 1.5rem 0;
+        margin: 0.75rem 0;
+    }
+
+    /* Sidebar: `---` dividers — less vertical gap than main */
+    section[data-testid="stSidebar"] hr {
+        margin: 0.35rem 0;
     }
 
     /* File uploader */
@@ -99,6 +104,24 @@ def inject_global_css():
         background: #0f1117;
         border: 1px dashed #1e2535;
         border-radius: 10px;
+    }
+
+    /* Log switcher (radio) tucked under native file chips */
+    section[data-testid="stSidebar"] div[data-testid="stElementContainer"]:has([data-testid="stFileUploader"])
+        + div[data-testid="stElementContainer"] div[data-testid="stRadio"] {
+        margin-top: 0.25rem !important;
+        margin-bottom: 0.35rem !important;
+    }
+
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] > div {
+        gap: 0.5rem 1rem;
+        flex-wrap: wrap;
+    }
+
+    section[data-testid="stSidebar"] div[data-testid="stRadio"] label {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 13px;
+        color: #e5e7eb;
     }
 
     /* Selectbox styling */
@@ -154,5 +177,31 @@ def inject_global_css():
         font-family: 'IBM Plex Mono', monospace;
     }
 
+    /* Remove Streamlit Light / Dark / System theme controls (dark-only app) */
+    [data-testid="stToolbar"] [data-testid="stMenuButton"] {
+        display: none !important;
+    }
+    [data-testid="stMainMenuItem-theme-Light"],
+    [data-testid="stMainMenuItem-theme-Dark"],
+    [data-testid="stMainMenuItem-theme-System"] {
+        display: none !important;
+    }
+
     </style>
     """, unsafe_allow_html=True)
+
+
+def inject_file_uploader_hide_add_button(hide: bool) -> None:
+    """Hide the multi-file uploader's '+' (Add files) control when two files are already selected."""
+    if not hide:
+        return
+    st.markdown(
+        """
+        <style>
+        div[data-testid="stFileUploader"] button[aria-label="Add files"] {
+            display: none !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )

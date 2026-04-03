@@ -1,0 +1,29 @@
+# Default app chrome to dark; mirror the "Light" preset to the same palette so
+# a light appearance is not available from Streamlit's theme switcher.
+[theme]
+base = "dark"
+primaryColor = "#3b82f6"
+backgroundColor = "#080b12"
+secondaryBackgroundColor = "#0f1117"
+textColor = "#e5e7eb"
+
+[theme.sidebar]
+secondaryBackgroundColor = "#0a0d16"
+
+[theme.light]
+primaryColor = "#3b82f6"
+backgroundColor = "#080b12"
+secondaryBackgroundColor = "#0f1117"
+textColor = "#e5e7eb"
+
+[theme.light.sidebar]
+secondaryBackgroundColor = "#0a0d16"
+
+[theme.dark]
+primaryColor = "#3b82f6"
+backgroundColor = "#080b12"
+secondaryBackgroundColor = "#0f1117"
+textColor = "#e5e7eb"
+
+[theme.dark.sidebar]
+secondaryBackgroundColor = "#0a0d16"
