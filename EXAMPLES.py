@@ -99,7 +99,7 @@ Example usage and quickstart guide for UAV Telemetry Dashboard
    # Compute metrics
    metrics = compute_metrics(data)
    print(f"Flight duration: {metrics['duration_str']}")
-   print(f"Distance: {metrics['distance_km']:.2f} km")
+   print(f"Distance: {metrics['distance_m']:.0f} m")
    
    # Extract specific panel
    battery_fig = build_battery_panel(data)

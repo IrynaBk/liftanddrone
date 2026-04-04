@@ -42,6 +42,8 @@ MOTOR_SATURATION_MARGIN = 50  # PWM units from max/min
 # GPS filtering thresholds
 MIN_SATS = 6  # Minimum satellite count for valid fix
 MAX_HDOP = 2.5  # Maximum HDOP for valid fix
+_ALT_MEDIAN_K = 7  # median filter window (odd, capped by track length)
+_MAX_PLAUSIBLE_H_SPEED = 200.0  # m/s; reject GPS segments implying higher horizontal speed
 
 # Message types to extract
 MESSAGE_TYPES = ['ATT', 'GPS', 'BAT', 'VIBE', 'RCOU', 'RCIN', 'IMU', 'MODE', 'ERR', 'MSG', 'EV', 'BARO']
@@ -72,6 +74,20 @@ def haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     c = 2 * math.asin(math.sqrt(a))
     
     return EARTH_RADIUS_M * c
+
+
+_haversine = haversine
+
+
+def _median_filter(values: List[float], k: int) -> List[float]:
+    """Sliding-window median with edge padding. k must be odd."""
+    pad = k // 2
+    arr = np.asarray(values, dtype=float)
+    padded = np.pad(arr, pad, mode="edge")
+    out = np.empty_like(arr)
+    for i in range(len(arr)):
+        out[i] = np.median(padded[i : i + k])
+    return out.tolist()
 
 
 def integrate_velocity(accel_array: np.ndarray, time_array: np.ndarray) -> np.ndarray:
@@ -230,33 +246,54 @@ def compute_metrics(data: Dict[str, List[Dict]]) -> Dict:
         metrics['duration_s'] = 0
         metrics['duration_str'] = "N/A"
     
-    # ---- Distance Traveled (Haversine) ----
-    if len(gps_data) > 1:
-        total_distance_m = 0.0
-        for i in range(1, len(gps_data)):
-            lat1 = gps_data[i - 1].get('Lat', 0)
-            lon1 = gps_data[i - 1].get('Lng', 0)
-            lat2 = gps_data[i].get('Lat', 0)
-            lon2 = gps_data[i].get('Lng', 0)
-            
+    # ------------------------------------------------------------------
+    # Horizontal distance and altitude gain (GPS + Haversine)
+    # ------------------------------------------------------------------
+    metrics['distance_m'] = 0.0
+    metrics['max_alt_m'] = 0.0
+    metrics['min_alt_m'] = 0.0
+    metrics['alt_gain_m'] = 0.0
+
+    if gps_data:
+        gps_records = gps_data
+        altitudes = [r.get('Alt', 0) for r in gps_records]
+        k_alt = max(3, min(_ALT_MEDIAN_K, len(altitudes)) | 1)  # odd, ≥3
+        alt_smooth = _median_filter(altitudes, k=k_alt) if len(altitudes) >= 3 else altitudes
+
+        seg_h_dists: List[float] = []
+        for i in range(1, len(gps_records)):
+            prev, curr = gps_records[i - 1], gps_records[i]
+            prev_us = prev.get('TimeUS')
+            curr_us = curr.get('TimeUS')
+            if prev_us is not None and curr_us is not None:
+                dt = (curr_us - prev_us) / 1_000_000.0
+            else:
+                dt = curr['TimeS'] - prev['TimeS']
+            if dt <= 0:
+                continue
+            lat1 = prev.get('Lat', 0)
+            lon1 = prev.get('Lng', 0)
+            lat2 = curr.get('Lat', 0)
+            lon2 = curr.get('Lng', 0)
             if lat1 != 0 and lon1 != 0 and lat2 != 0 and lon2 != 0:
-                total_distance_m += haversine(lat1, lon1, lat2, lon2)
-        
+                h_dist = _haversine(lat1, lon1, lat2, lon2)
+                if h_dist / dt <= _MAX_PLAUSIBLE_H_SPEED:
+                    seg_h_dists.append(h_dist)
+
+        total_distance_m = sum(seg_h_dists)
         metrics['distance_m'] = total_distance_m
-        metrics['distance_km'] = total_distance_m / 1000.0
-    else:
-        metrics['distance_m'] = 0.0
-        metrics['distance_km'] = 0.0
+
+        metrics['max_alt_m'] = max(alt_smooth) if alt_smooth else 0.0
+        metrics['min_alt_m'] = min(alt_smooth) if alt_smooth else 0.0
+        metrics['alt_gain_m'] = metrics['max_alt_m'] - metrics['min_alt_m']
     
     # ---- Max Horizontal Speed ----
     if gps_data:
         speeds = [msg.get('Spd', 0) for msg in gps_data]
         max_speed_ms = max(speeds) if speeds else 0.0
         metrics['max_h_speed_ms'] = max_speed_ms
-        metrics['max_h_speed_kmh'] = max_speed_ms * 3.6
     else:
         metrics['max_h_speed_ms'] = 0.0
-        metrics['max_h_speed_kmh'] = 0.0
     
     # ---- Max Vertical Speed ----
     if len(gps_data) > 1:
@@ -273,17 +310,6 @@ def compute_metrics(data: Dict[str, List[Dict]]) -> Dict:
         metrics['max_v_speed_ms'] = max_v_speed
     else:
         metrics['max_v_speed_ms'] = 0.0
-    
-    # ---- Max Altitude Gain ----
-    if gps_data:
-        alts = [msg.get('Alt', 0) for msg in gps_data]
-        metrics['max_alt_m'] = max(alts) if alts else 0.0
-        metrics['min_alt_m'] = min(alts) if alts else 0.0
-        metrics['alt_gain_m'] = metrics['max_alt_m'] - metrics['min_alt_m']
-    else:
-        metrics['max_alt_m'] = 0.0
-        metrics['min_alt_m'] = 0.0
-        metrics['alt_gain_m'] = 0.0
     
     # ---- Max Acceleration ----
     if imu_data:
@@ -354,8 +380,8 @@ def build_summary_panel(metrics: Dict, data: Dict) -> go.Figure:
     # Create summary table
     summary_data = [
         ["Duration", metrics.get('duration_str', 'N/A')],
-        ["Distance", f"{metrics.get('distance_km', 0):.2f} km"],
-        ["Max H. Speed", f"{metrics.get('max_h_speed_ms', 0):.1f} m/s ({metrics.get('max_h_speed_kmh', 0):.1f} km/h)"],
+        ["Distance", f"{metrics.get('distance_m', 0):.0f} m"],
+        ["Max H. Speed", f"{metrics.get('max_h_speed_ms', 0):.1f} m/s"],
         ["Max V. Speed", f"{metrics.get('max_v_speed_ms', 0):.1f} m/s"],
         ["Max Altitude Gain", f"{metrics.get('alt_gain_m', 0):.1f} m"],
         ["Max Acceleration", f"{metrics.get('max_accel_ms2', 0):.2f} m/s²"],
@@ -1367,8 +1393,8 @@ Examples:
     print("MISSION SUMMARY")
     print("=" * 60)
     print(f"Duration:          {metrics.get('duration_str', 'N/A')}")
-    print(f"Distance:          {metrics.get('distance_km', 0):.2f} km")
-    print(f"Max H. Speed:      {metrics.get('max_h_speed_ms', 0):.1f} m/s ({metrics.get('max_h_speed_kmh', 0):.1f} km/h)")
+    print(f"Distance:          {metrics.get('distance_m', 0):.0f} m")
+    print(f"Max H. Speed:      {metrics.get('max_h_speed_ms', 0):.1f} m/s")
     print(f"Max V. Speed:      {metrics.get('max_v_speed_ms', 0):.1f} m/s")
     print(f"Max Altitude Gain: {metrics.get('alt_gain_m', 0):.1f} m")
     print(f"Max Acceleration:  {metrics.get('max_accel_ms2', 0):.2f} m/s²")

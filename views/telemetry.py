@@ -13,7 +13,6 @@ from drone_dashboard import (
 
 def render_panel_toolbar(data: Dict, color_by: str) -> None:
     """Render switchable panel toolbar and selected panel."""
-    st.markdown("---")
     st.markdown("### Telemetry Panels")
 
     panels = {

@@ -26,15 +26,15 @@ def render_summary(metrics: Dict) -> None:
         },
         {
             'label': 'Total Distance',
-            'value': f"{metrics.get('distance_km', 0):.2f}",
-            'unit': 'km',
+            'value': f"{metrics.get('distance_m', 0):.0f}",
+            'unit': 'm',
             'icon': '📍',
             'color': '#34d399'
         },
         {
             'label': 'Max H. Speed',
-            'value': f"{metrics.get('max_h_speed_kmh', 0):.1f}",
-            'unit': 'km/h',
+            'value': f"{metrics.get('max_h_speed_ms', 0):.1f}",
+            'unit': 'm/s',
             'icon': '⚡',
             'color': '#f59e0b'
         },
@@ -46,7 +46,7 @@ def render_summary(metrics: Dict) -> None:
             'color': '#f59e0b'
         },
         {
-            'label': 'Max Altitude Gain',
+            'label': 'Max Altitude Gain(over the sea level)',
             'value': f"{metrics.get('alt_gain_m', 0):.0f}",
             'unit': 'meters',
             'icon': '🏔️',
