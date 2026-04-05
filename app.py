@@ -7,6 +7,8 @@ import hashlib
 import logging
 
 import streamlit as st
+from dotenv import load_dotenv
+load_dotenv()
 
 logging.basicConfig(
     level=logging.INFO,
@@ -24,6 +26,7 @@ from data.loader import load_data_from_bytes, extract_firmware_version
 from views.summary import render_summary
 from views.map import render_map
 from views.telemetry import render_panel_toolbar
+from views.ai_analysis import render_ai_analysis
 
 
 # ============================================================================
@@ -170,6 +173,8 @@ def main():
         render_summary(metrics)
         st.divider()
         render_map(data, color_by)
+        st.divider()
+        render_ai_analysis(metrics)
         st.divider()
         render_panel_toolbar(data, color_by)
     else:
