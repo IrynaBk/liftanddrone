@@ -6,36 +6,36 @@ import os
 from typing import Dict, Tuple, Optional
 from geopy.geocoders import Nominatim
 from drone_dashboard import parse_log, compute_metrics
+from processing.ekf_runner import run_ekf_on_log
 
 
 @st.cache_data
 def load_data_from_bytes(file_bytes: bytes) -> Tuple[Dict, Dict]:
     """
-    Parse log from uploaded bytes and compute metrics.
+    Parse log from uploaded bytes, run EKF sensor fusion, and compute metrics.
     Cached to avoid re-parsing on re-renders.
 
     Args:
         file_bytes: Raw bytes from uploaded file
 
     Returns:
-        Tuple of (data dict, metrics dict)
+        Tuple of (data dict, metrics dict).
+        data['EKF'] contains the fused trajectory dict (or None).
     """
-    # Write bytes to temporary file (parse_log expects a filepath)
     with tempfile.NamedTemporaryFile(suffix=".bin", delete=False) as tmp:
         tmp.write(file_bytes)
         tmp_path = tmp.name
 
     try:
         data = parse_log(tmp_path)
+        data['EKF'] = run_ekf_on_log(data)
         metrics = compute_metrics(data)
         return data, metrics
     finally:
-        # Clean up temp file - handle Windows file locking
         try:
             if os.path.exists(tmp_path):
                 os.remove(tmp_path)
         except (PermissionError, OSError):
-            # File may still be locked on Windows; OS will clean it up eventually
             pass
 
 

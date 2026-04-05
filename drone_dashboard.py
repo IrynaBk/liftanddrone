@@ -201,26 +201,41 @@ def parse_log(filepath: str) -> Dict[str, List[Dict]]:
 # ============================================================================
 
 
+def _smooth(values: list, window: int = 5) -> list:
+    """Apply simple moving-average smoothing to a list of floats."""
+    if len(values) < window:
+        return values
+    kernel = np.ones(window) / window
+    smoothed = np.convolve(values, kernel, mode='same')
+    return smoothed.tolist()
+
+
 def compute_metrics(data: Dict[str, List[Dict]]) -> Dict:
     """
     Compute all mission metrics from parsed log data.
-    
+
     Args:
         data: Dictionary of message lists from parse_log()
-        
+
     Returns:
         Dictionary of computed metrics with human-readable keys
     """
     metrics = {}
-    
-    # ---- Flight Duration ----
+
+    GRAVITY_MS2 = 9.80665  # standard gravity (m/s²)
+
+    # ---- Source data ----
     gps_data = data.get('GPS', [])
     imu_data = data.get('IMU', [])
     bat_data = data.get('BAT', [])
-    att_data = data.get('ATT', [])
-    rcou_data = data.get('RCOU', [])
-    vibe_data = data.get('VIBE', [])
-    
+
+    # ---- Quality-filtered GPS subset (HDop / NSats) ----
+    filtered_gps = [
+        msg for msg in gps_data
+        if msg.get('HDop', 999) < MAX_HDOP and msg.get('NSats', 0) >= MIN_SATS
+    ]
+
+    # ---- Flight Duration ----
     if gps_data:
         duration_s = gps_data[-1]['TimeS'] - gps_data[0]['TimeS']
         metrics['duration_s'] = duration_s
@@ -229,90 +244,141 @@ def compute_metrics(data: Dict[str, List[Dict]]) -> Dict:
     else:
         metrics['duration_s'] = 0
         metrics['duration_str'] = "N/A"
-    
-    # ---- Distance Traveled (Haversine) ----
-    if len(gps_data) > 1:
+
+    # ---- Distance Traveled (Haversine) — quality-filtered ----
+    if len(filtered_gps) > 1:
         total_distance_m = 0.0
-        for i in range(1, len(gps_data)):
-            lat1 = gps_data[i - 1].get('Lat', 0)
-            lon1 = gps_data[i - 1].get('Lng', 0)
-            lat2 = gps_data[i].get('Lat', 0)
-            lon2 = gps_data[i].get('Lng', 0)
-            
+        for i in range(1, len(filtered_gps)):
+            lat1 = filtered_gps[i - 1].get('Lat', 0)
+            lon1 = filtered_gps[i - 1].get('Lng', 0)
+            lat2 = filtered_gps[i].get('Lat', 0)
+            lon2 = filtered_gps[i].get('Lng', 0)
+
             if lat1 != 0 and lon1 != 0 and lat2 != 0 and lon2 != 0:
                 total_distance_m += haversine(lat1, lon1, lat2, lon2)
-        
+
         metrics['distance_m'] = total_distance_m
         metrics['distance_km'] = total_distance_m / 1000.0
     else:
         metrics['distance_m'] = 0.0
         metrics['distance_km'] = 0.0
-    
-    # ---- Max Horizontal Speed ----
-    if gps_data:
-        speeds = [msg.get('Spd', 0) for msg in gps_data]
-        max_speed_ms = max(speeds) if speeds else 0.0
-        metrics['max_h_speed_ms'] = max_speed_ms
-        metrics['max_h_speed_kmh'] = max_speed_ms * 3.6
+
+    # ---- Max Horizontal Speed (GPS ground speed, m/s) ----
+    if filtered_gps:
+        h_speeds = [msg.get('Spd', 0) for msg in filtered_gps]
+        max_h_speed = max(h_speeds)
+        metrics['max_h_speed_ms'] = max_h_speed
+        metrics['max_h_speed_kmh'] = max_h_speed * 3.6
     else:
         metrics['max_h_speed_ms'] = 0.0
         metrics['max_h_speed_kmh'] = 0.0
-    
-    # ---- Max Vertical Speed ----
-    if len(gps_data) > 1:
-        alts = [msg.get('Alt', 0) for msg in gps_data]
-        times = [msg['TimeS'] for msg in gps_data]
-        max_v_speed = 0.0
-        
-        for i in range(1, len(alts)):
-            dt = times[i] - times[i - 1]
-            if dt > 0:
-                v_speed = abs(alts[i] - alts[i - 1]) / dt
-                max_v_speed = max(max_v_speed, v_speed)
-        
+
+    # ---- Vertical Speed — taken directly from GPS VZ field ----
+    # VZ is the GPS-reported vertical velocity (m/s, positive = down in NED).
+    # Using dAlt/dt caused a boundary artifact: np.convolve(mode='same') pads
+    # with zeros, so smoothed altitude near t=0 jumps from 0 to the actual MSL
+    # altitude (~584 m), giving a fake dAlt/dt ≈ 584 m/s = 2102 km/h.
+    if filtered_gps:
+        vz_values = [abs(msg.get('VZ', 0)) for msg in filtered_gps]
+        max_v_speed = max(vz_values) if vz_values else 0.0
         metrics['max_v_speed_ms'] = max_v_speed
+        metrics['max_v_speed_kmh'] = max_v_speed * 3.6
     else:
         metrics['max_v_speed_ms'] = 0.0
-    
+        metrics['max_v_speed_kmh'] = 0.0
+
+    # ---- Max Total (3D) Speed = sqrt(Vh² + Vv²) ----
+    if filtered_gps:
+        max_total_speed = 0.0
+        for msg in filtered_gps:
+            h_speed = msg.get('Spd', 0)
+            v_speed = abs(msg.get('VZ', 0))
+            total_speed = math.sqrt(h_speed ** 2 + v_speed ** 2)
+            max_total_speed = max(max_total_speed, total_speed)
+        metrics['max_total_speed_ms'] = max_total_speed
+        metrics['max_total_speed_kmh'] = max_total_speed * 3.6
+    else:
+        metrics['max_total_speed_ms'] = 0.0
+        metrics['max_total_speed_kmh'] = 0.0
+
     # ---- Max Altitude Gain ----
-    if gps_data:
-        alts = [msg.get('Alt', 0) for msg in gps_data]
-        metrics['max_alt_m'] = max(alts) if alts else 0.0
-        metrics['min_alt_m'] = min(alts) if alts else 0.0
+    if filtered_gps:
+        alts = [msg.get('Alt', 0) for msg in filtered_gps]
+        metrics['max_alt_m'] = max(alts)
+        metrics['min_alt_m'] = min(alts)
         metrics['alt_gain_m'] = metrics['max_alt_m'] - metrics['min_alt_m']
     else:
         metrics['max_alt_m'] = 0.0
         metrics['min_alt_m'] = 0.0
         metrics['alt_gain_m'] = 0.0
-    
-    # ---- Max Acceleration ----
+
+    # ---- Max Acceleration (gravity-compensated) ----
+    # IMU AccX/AccY/AccZ include gravity (~9.81 m/s² on Z at rest).
+    # We subtract 1 g from the total magnitude so the metric reflects
+    # only the dynamic (manoeuvre) acceleration the airframe experiences.
     if imu_data:
         max_accel = 0.0
         for msg in imu_data:
             ax = msg.get('AccX', 0)
             ay = msg.get('AccY', 0)
             az = msg.get('AccZ', 0)
-            
-            # Magnitude of acceleration in m/s²
-            accel_mag = math.sqrt(ax**2 + ay**2 + az**2)
-            max_accel = max(max_accel, accel_mag)
-        
+            accel_mag = math.sqrt(ax ** 2 + ay ** 2 + az ** 2)
+            dynamic_accel = abs(accel_mag - GRAVITY_MS2)
+            max_accel = max(max_accel, dynamic_accel)
+
         metrics['max_accel_ms2'] = max_accel
     else:
         metrics['max_accel_ms2'] = 0.0
-    
-    # ---- Average Hover Current ----
+
+    # ---- IMU-derived velocity via trapezoidal integration ----
+    if len(imu_data) > 1:
+        imu_times = np.array([msg['TimeS'] for msg in imu_data])
+        acc_x = np.array([msg.get('AccX', 0) for msg in imu_data])
+        acc_y = np.array([msg.get('AccY', 0) for msg in imu_data])
+        # Subtract gravity from Z axis (sensor frame, Z points down in NED)
+        acc_z = np.array([msg.get('AccZ', 0) for msg in imu_data]) + GRAVITY_MS2
+
+        vel_x = integrate_velocity(acc_x, imu_times)
+        vel_y = integrate_velocity(acc_y, imu_times)
+        vel_z = integrate_velocity(acc_z, imu_times)
+
+        imu_speed = np.sqrt(vel_x ** 2 + vel_y ** 2 + vel_z ** 2)
+        metrics['max_imu_speed_ms'] = float(np.max(imu_speed))
+    else:
+        metrics['max_imu_speed_ms'] = 0.0
+
+    # ---- Average GPS Satellites ----
+    if filtered_gps:
+        sats = [msg.get('NSats', 0) for msg in filtered_gps]
+        metrics['avg_sats'] = float(np.mean(sats))
+    else:
+        metrics['avg_sats'] = 0.0
+
+    # ---- Average Hover Current / Energy ----
     if bat_data:
         currents = [msg.get('Curr', 0) for msg in bat_data]
-        metrics['avg_current_a'] = np.mean(currents) if currents else 0.0
-        
-        # Total energy: mAh (use last CurrTot value or compute from integration)
+        metrics['avg_current_a'] = float(np.mean(currents)) if currents else 0.0
+
         curr_tots = [msg.get('CurrTot', 0) for msg in bat_data]
         metrics['energy_used_mah'] = curr_tots[-1] if curr_tots else 0.0
     else:
         metrics['avg_current_a'] = 0.0
         metrics['energy_used_mah'] = 0.0
-    
+
+    # ---- EKF-fused metrics (if available) ----
+    ekf = data.get('EKF')
+    if ekf and ekf.get('speed'):
+        metrics['ekf_max_speed_ms'] = max(ekf['speed'])
+        metrics['ekf_max_speed_kmh'] = metrics['ekf_max_speed_ms'] * 3.6
+        metrics['ekf_max_h_speed_ms'] = max(ekf['h_speed'])
+        metrics['ekf_max_h_speed_kmh'] = metrics['ekf_max_h_speed_ms'] * 3.6
+        metrics['ekf_max_v_speed_ms'] = max(ekf['v_speed'])
+        metrics['ekf_max_v_speed_kmh'] = metrics['ekf_max_v_speed_ms'] * 3.6
+        metrics['ekf_available'] = True
+        metrics['ekf_board_rotation'] = ekf.get('board_rotation_applied', False)
+    else:
+        metrics['ekf_available'] = False
+
     return metrics
 
 
@@ -355,10 +421,13 @@ def build_summary_panel(metrics: Dict, data: Dict) -> go.Figure:
     summary_data = [
         ["Duration", metrics.get('duration_str', 'N/A')],
         ["Distance", f"{metrics.get('distance_km', 0):.2f} km"],
+        ["Max Total Speed", f"{metrics.get('max_total_speed_ms', 0):.1f} m/s ({metrics.get('max_total_speed_kmh', 0):.1f} km/h)"],
         ["Max H. Speed", f"{metrics.get('max_h_speed_ms', 0):.1f} m/s ({metrics.get('max_h_speed_kmh', 0):.1f} km/h)"],
-        ["Max V. Speed", f"{metrics.get('max_v_speed_ms', 0):.1f} m/s"],
+        ["Max V. Speed", f"{metrics.get('max_v_speed_ms', 0):.1f} m/s ({metrics.get('max_v_speed_kmh', 0):.1f} km/h)"],
         ["Max Altitude Gain", f"{metrics.get('alt_gain_m', 0):.1f} m"],
-        ["Max Acceleration", f"{metrics.get('max_accel_ms2', 0):.2f} m/s²"],
+        ["Max Acceleration", f"{metrics.get('max_accel_ms2', 0):.2f} m/s² (gravity-compensated)"],
+        ["IMU-derived Speed", f"{metrics.get('max_imu_speed_ms', 0):.1f} m/s (trapezoidal integration)"],
+        ["Avg GPS Satellites", f"{metrics.get('avg_sats', 0):.0f}"],
         ["Avg Current", f"{metrics.get('avg_current_a', 0):.1f} A"],
         ["Total Energy", f"{metrics.get('energy_used_mah', 0):.0f} mAh"],
     ]
@@ -772,76 +841,97 @@ def build_events_panel(data: Dict) -> go.Figure:
 def build_3d_trajectory(data: Dict, color_by: str = 'speed') -> go.Figure:
     """
     Create an interactive 3D trajectory viewer with optional coloring.
-    
+    Uses EKF-fused trajectory when available, falls back to raw GPS + WGS-84→ENU.
+
     Args:
-        data: Raw parsed log data
-        color_by: 'speed' or 'time' — how to color the trajectory
-        
+        data: Raw parsed log data (may contain 'EKF' key with fused output)
+        color_by: 'speed', 'altitude', or 'time' — how to color the trajectory
+
     Returns:
         Plotly Figure object
     """
-    gps_data = data.get('GPS', [])
-    
-    if not gps_data:
+    ekf = data.get('EKF')
+    source_label = "GPS"
+
+    if ekf and ekf.get('east'):
+        # Use EKF-fused trajectory (NED → ENU for display)
+        east_list = ekf['east']
+        north_list = ekf['north']
+        up_list = ekf['up']
+        speeds = ekf['speed']
+        times = ekf['time_s']
+        source_label = "EKF-fused"
+    else:
+        # Fallback: raw GPS → ENU via flat-Earth
+        gps_data = data.get('GPS', [])
+
+        if not gps_data:
+            fig = go.Figure()
+            fig.add_annotation(text="No GPS data available for 3D trajectory")
+            return fig
+
+        lat0, lon0, alt0 = None, None, None
+        for msg in gps_data:
+            lat = msg.get('Lat', 0)
+            lon = msg.get('Lng', 0)
+            alt = msg.get('Alt', 0)
+            if lat != 0 and lon != 0:
+                lat0, lon0, alt0 = lat, lon, alt
+                break
+
+        if lat0 is None:
+            fig = go.Figure()
+            fig.add_annotation(text="No valid GPS coordinates for 3D trajectory")
+            return fig
+
+        east_list = []
+        north_list = []
+        up_list = []
+        speeds = []
+        times = []
+
+        for msg in gps_data:
+            lat = msg.get('Lat', 0)
+            lon = msg.get('Lng', 0)
+            alt = msg.get('Alt', 0)
+            spd = msg.get('Spd', 0)
+
+            if lat == 0 or lon == 0:
+                continue
+
+            e, n, u = wgs84_to_enu(lat, lon, alt, lat0, lon0, alt0)
+            east_list.append(e)
+            north_list.append(n)
+            up_list.append(u)
+            speeds.append(spd)
+            times.append(msg['TimeS'])
+
+    if not east_list:
         fig = go.Figure()
-        fig.add_annotation(text="No GPS data available for 3D trajectory")
+        fig.add_annotation(text="No trajectory data available")
         return fig
-    
-    # Use first valid GPS fix as origin
-    lat0, lon0, alt0 = None, None, None
-    for msg in gps_data:
-        lat = msg.get('Lat', 0)
-        lon = msg.get('Lng', 0)
-        alt = msg.get('Alt', 0)
-        if lat != 0 and lon != 0:
-            lat0, lon0, alt0 = lat, lon, alt
-            break
-    
-    if lat0 is None:
-        fig = go.Figure()
-        fig.add_annotation(text="No valid GPS coordinates for 3D trajectory")
-        return fig
-    
-    # Convert all GPS points to ENU
-    east_list = []
-    north_list = []
-    up_list = []
-    speeds = []
-    times = []
-    
-    for msg in gps_data:
-        lat = msg.get('Lat', 0)
-        lon = msg.get('Lng', 0)
-        alt = msg.get('Alt', 0)
-        spd = msg.get('Spd', 0)
-        
-        if lat == 0 or lon == 0:
-            continue
-        
-        e, n, u = wgs84_to_enu(lat, lon, alt, lat0, lon0, alt0)
-        east_list.append(e)
-        north_list.append(n)
-        up_list.append(u)
-        speeds.append(spd)
-        times.append(msg['TimeS'])
-    
+
     # Determine color scale
     if color_by == 'speed' and speeds:
         color_scale_vals = speeds
         colorbar_title = "Speed (m/s)"
         colorscale = 'Viridis'
+    elif color_by == 'altitude' and up_list:
+        color_scale_vals = up_list
+        colorbar_title = "Altitude (m)"
+        colorscale = 'Viridis'
     else:  # color by time
         color_scale_vals = times
         colorbar_title = "Time (s)"
         colorscale = 'Plasma'
-    
+
     # Normalize color values to [0, 1]
     color_min = min(color_scale_vals)
     color_max = max(color_scale_vals)
     color_norm = [(v - color_min) / (color_max - color_min + 1e-6) for v in color_scale_vals]
-    
+
     fig = go.Figure()
-    
+
     # Main trajectory line
     fig.add_trace(go.Scatter3d(
         x=east_list, y=north_list, z=up_list,
@@ -855,7 +945,7 @@ def build_3d_trajectory(data: Dict, color_by: str = 'speed') -> go.Figure:
         hovertemplate='<b>Position</b><br>E: %{x:.1f}m<br>N: %{y:.1f}m<br>Alt: %{z:.1f}m<extra></extra>',
         name='Trajectory'
     ))
-    
+
     # Scatter points for trajectory (with colorbar)
     fig.add_trace(go.Scatter3d(
         x=east_list, y=north_list, z=up_list,
@@ -871,28 +961,27 @@ def build_3d_trajectory(data: Dict, color_by: str = 'speed') -> go.Figure:
         hovertemplate='<b>Position</b><br>E: %{x:.1f}m<br>N: %{y:.1f}m<br>Alt: %{z:.1f}m<extra></extra>',
         name='Position'
     ))
-    
-    # Start marker (green triangle)
-    if east_list and north_list and up_list:
-        fig.add_trace(go.Scatter3d(
-            x=[east_list[0]], y=[north_list[0]], z=[up_list[0]],
-            mode='markers',
-            marker=dict(size=12, color='green', symbol='diamond'),
-            name='Takeoff',
-            hovertemplate='<b>Takeoff</b><br>E: %{x:.1f}m<br>N: %{y:.1f}m<br>Alt: %{z:.1f}m<extra></extra>'
-        ))
-        
-        # End marker (red triangle)
-        fig.add_trace(go.Scatter3d(
-            x=[east_list[-1]], y=[north_list[-1]], z=[up_list[-1]],
-            mode='markers',
-            marker=dict(size=12, color='red', symbol='diamond'),
-            name='Landing',
-            hovertemplate='<b>Landing</b><br>E: %{x:.1f}m<br>N: %{y:.1f}m<br>Alt: %{z:.1f}m<extra></extra>'
-        ))
+
+    # Start marker (green diamond)
+    fig.add_trace(go.Scatter3d(
+        x=[east_list[0]], y=[north_list[0]], z=[up_list[0]],
+        mode='markers',
+        marker=dict(size=12, color='green', symbol='diamond'),
+        name='Takeoff',
+        hovertemplate='<b>Takeoff</b><br>E: %{x:.1f}m<br>N: %{y:.1f}m<br>Alt: %{z:.1f}m<extra></extra>'
+    ))
+
+    # End marker (red diamond)
+    fig.add_trace(go.Scatter3d(
+        x=[east_list[-1]], y=[north_list[-1]], z=[up_list[-1]],
+        mode='markers',
+        marker=dict(size=12, color='red', symbol='diamond'),
+        name='Landing',
+        hovertemplate='<b>Landing</b><br>E: %{x:.1f}m<br>N: %{y:.1f}m<br>Alt: %{z:.1f}m<extra></extra>'
+    ))
     
     fig.update_layout(
-        title=f"3D Trajectory (colored by {color_by.title()})",
+        title=f"3D Trajectory — {source_label} (colored by {color_by.title()})",
         template="plotly_dark",
         scene=dict(
             xaxis=dict(title='East (m)', backgroundcolor='rgb(10, 10, 10)', gridcolor='rgb(50, 50, 50)'),

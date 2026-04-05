@@ -32,6 +32,13 @@ def render_summary(metrics: Dict) -> None:
             'color': '#34d399'
         },
         {
+            'label': 'Max Total Speed',
+            'value': f"{metrics.get('max_total_speed_kmh', 0):.1f}",
+            'unit': 'km/h',
+            'icon': '🚀',
+            'color': '#e879f9'
+        },
+        {
             'label': 'Max H. Speed',
             'value': f"{metrics.get('max_h_speed_kmh', 0):.1f}",
             'unit': 'km/h',
@@ -40,8 +47,8 @@ def render_summary(metrics: Dict) -> None:
         },
         {
             'label': 'Max V. Speed',
-            'value': f"{metrics.get('max_v_speed_ms', 0):.1f}",
-            'unit': 'm/s',
+            'value': f"{metrics.get('max_v_speed_kmh', 0):.1f}",
+            'unit': 'km/h',
             'icon': '↕️',
             'color': '#f59e0b'
         },
@@ -75,14 +82,14 @@ def render_summary(metrics: Dict) -> None:
         },
     ]
 
-    # Row 1: First 4 cards
-    cols1 = st.columns(4, gap="small")
-    for i, card_data in enumerate(cards[:4]):
+    # Row 1: First 5 cards
+    cols1 = st.columns(5, gap="small")
+    for i, card_data in enumerate(cards[:5]):
         with cols1[i]:
             st.markdown(stat_card(**card_data), unsafe_allow_html=True)
 
-    # Row 2: Last 4 cards
-    cols2 = st.columns(4, gap="small")
-    for i, card_data in enumerate(cards[4:]):
+    # Row 2: Remaining cards
+    cols2 = st.columns(5, gap="small")
+    for i, card_data in enumerate(cards[5:]):
         with cols2[i]:
             st.markdown(stat_card(**card_data), unsafe_allow_html=True)
