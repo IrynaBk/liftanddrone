@@ -601,12 +601,15 @@ def build_3d_trajectory(data: Dict, color_by: str = 'speed') -> go.Figure:
         colorbar_title = "Time (s)"
         colorscale = 'Plasma'
 
+
     # Normalize color values to [0, 1]
     color_min = min(color_scale_vals)
     color_max = max(color_scale_vals)
     color_norm = [(v - color_min) / (color_max - color_min + 1e-6) for v in color_scale_vals]
 
+
     fig = go.Figure()
+
 
     # Main trajectory line
     fig.add_trace(go.Scatter3d(
@@ -621,6 +624,7 @@ def build_3d_trajectory(data: Dict, color_by: str = 'speed') -> go.Figure:
         hovertemplate='<b>Position</b><br>E: %{x:.1f}m<br>N: %{y:.1f}m<br>Alt: %{z:.1f}m<extra></extra>',
         name='Trajectory'
     ))
+
 
     # Scatter points for trajectory (with colorbar)
     fig.add_trace(go.Scatter3d(
@@ -670,6 +674,7 @@ def build_3d_trajectory(data: Dict, color_by: str = 'speed') -> go.Figure:
         margin=dict(l=10, r=10, t=40, b=10),
         showlegend=True
     )
+
 
     return fig
 
