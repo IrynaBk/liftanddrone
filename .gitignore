@@ -3,10 +3,14 @@
 venv/
 env/
 .env
+.streamlit/secrets.toml
 
 # Python Cache
 __pycache__/
 
+
+# MkDocs
+site/
 
 # IDE
 .vscode/

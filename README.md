@@ -2,6 +2,8 @@
 
 A complete, production-ready Python application for analyzing ArduPilot Dataflash binary logs and rendering interactive mission analytics with 3D trajectory visualization.
 
+**Documentation:** full documentation yout can find there — [Run the service](https://irynabk.github.io/liftanddrone/run-service/).
+
 ## Features
 
 ### Log Parsing
@@ -10,16 +12,16 @@ A complete, production-ready Python application for analyzing ArduPilot Dataflas
 - **Relative Timestamping**: Converts microsecond timestamps to seconds relative to mission start
 
 ### Analytics & Metrics
-- **Distance Calculation**: Haversine-based geodetic distance with meter-level precision
-- **Velocity Integration**: Trapezoidal integration of IMU acceleration data
-- **Flight Metrics**:
-  - Total duration (mm:ss)
-  - Distance traveled (km)
-  - Max horizontal & vertical speed
-  - Max acceleration magnitude
-  - Altitude gain
-  - Average current draw
-  - Total energy consumption (mAh)
+Computed in `service/metrics/metrics.py` (inputs prepared in `service/orchestrator.py`).
+
+- **Track distance**: Sum of **Haversine** segment lengths along the GPS path; segments faster than a plausibility cap are dropped; **distance warning** if the track fails that filter.
+- **Duration**: `mm:ss` from first to last GPS **`TimeS`** (or `N/A` without GPS).
+- **GPS speeds** (after `filter_gps_by_quality`): **max horizontal** (`Spd`), **max vertical** (`|VZ|`), **max 3D speed**, **mean satellite count**.
+- **IMU**: **Trapezoidal integration** of accelerations → **max IMU speed**; **max dynamic acceleration** = peak specific-force magnitude minus **gravity** (~9.81 m/s²).
+- **Altitude** (median-smoothed GPS alt): **max**, **min**, **gain** (max − min), **takeoff alt** (first fix), **max above takeoff**; **altitude gain warning** on suspicious vertical steps.
+- **Battery**: **average current** and **energy used (mAh)** from the last **`CurrTot`** sample; message if BAT is absent.
+- **EKF** (when present in the log pipeline): peak **EKF** horizontal/vertical/total speeds.
+- **Gyro extremes** warning from IMU (vibration-style sanity check).
 
 ### Streamlit Web UI (Modern Design)
 - **Responsive Sidebar**: File upload, display settings, quick stats
@@ -85,6 +87,17 @@ source venv/bin/activate
 ```bash
 pip install -r requirements.txt
 ```
+
+### Documentation site (MkDocs)
+
+To build and preview the project docs (Material for MkDocs):
+
+```bash
+pip install -r requirements-docs.txt
+mkdocs serve
+```
+
+Static output is generated with `mkdocs build` into `site/` (gitignored).
 
 ## Usage
 
