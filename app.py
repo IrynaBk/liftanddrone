@@ -148,9 +148,9 @@ def main():
 
             with col1:
                 st.metric("Duration", metrics["duration_str"])
-                st.metric("Distance", f"{metrics['distance_km']:.2f} km")
+                st.metric("Distance", f"{metrics['distance_m']:.0f} m")
             with col2:
-                st.metric("Max Speed", f"{metrics['max_total_speed_kmh']:.1f} km/h")
+                st.metric("Max Speed", f"{metrics['max_total_speed_ms']:.1f} m/s")
                 energy_val = display_value(metrics.get("energy_used_mah"), default=0, format_str="{:.0f}")
                 st.metric("Energy", f"{energy_val} mAh" if energy_val != "N/A" else "N/A")
 

@@ -42,6 +42,16 @@ def compute_metrics(data: Dict[str, List[Dict]]) -> Dict:
     metrics["distance_warning"] = track.get("distance_warning")
     metrics["alt_gain_warning"] = track.get("alt_gain_warning")
 
+    # Takeoff altitude = first valid GPS point altitude
+    # Max altitude above takeoff = max_alt_m - takeoff_alt (not max-min)
+    source_gps = filtered_gps if filtered_gps else gps_data
+    if source_gps:
+        metrics["takeoff_alt_m"] = float(source_gps[0].get("Alt", 0.0))
+        metrics["max_alt_above_takeoff_m"] = metrics["max_alt_m"] - metrics["takeoff_alt_m"]
+    else:
+        metrics["takeoff_alt_m"] = 0.0
+        metrics["max_alt_above_takeoff_m"] = 0.0
+
     if filtered_gps:
         h_speeds = [msg.get("Spd", 0) for msg in filtered_gps]
         max_h_speed = max(h_speeds)
