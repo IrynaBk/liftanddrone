@@ -13,8 +13,10 @@
       
       
       
-        <link rel="prev" href="../run-service/">
+        <link rel="prev" href="../ai-flight-analysis/">
       
+      
+        <link rel="next" href="../getting-started/">
       
       
         
@@ -25,7 +27,7 @@
     
     
       
-        <title>Development - Lift & Drone</title>
+        <title>Why math works - Lift & Drone</title>
       
     
     
@@ -76,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#development" class="md-skip">
+        <a href="#_1" class="md-skip">
           Skip to content
         </a>
       
@@ -112,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Development
+              Why math works
             
           </span>
         </div>
@@ -338,10 +340,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../why-math/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why math works
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -357,6 +386,81 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#theoretical-grounding-in-code-where-to-look" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Theoretical grounding in code: where to look
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#euler-angles-quaternions-and-gimbal-lock" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Euler angles, quaternions, and gimbal lock
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#double-integration-of-imu-data-where-errors-come-from" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Double integration of IMU data: where errors come from
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#other-why-this-formula-notes-in-the-repo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Other “why this formula” notes in the repo
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See also
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -419,37 +523,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Development
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../development/" class="md-nav__link">
         
   
   
@@ -465,70 +542,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#layout-streamlit-app" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Layout (Streamlit app)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#legacy-dash-dashboard" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Legacy Dash dashboard
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dependencies" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Dependencies
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#tests-and-quality" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Tests and quality
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -560,10 +573,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#layout-streamlit-app" class="md-nav__link">
+  <a href="#theoretical-grounding-in-code-where-to-look" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Layout (Streamlit app)
+        Theoretical grounding in code: where to look
       
     </span>
   </a>
@@ -571,10 +584,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#legacy-dash-dashboard" class="md-nav__link">
+  <a href="#euler-angles-quaternions-and-gimbal-lock" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Legacy Dash dashboard
+        Euler angles, quaternions, and gimbal lock
       
     </span>
   </a>
@@ -582,10 +595,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#dependencies" class="md-nav__link">
+  <a href="#double-integration-of-imu-data-where-errors-come-from" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Dependencies
+        Double integration of IMU data: where errors come from
       
     </span>
   </a>
@@ -593,10 +606,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#tests-and-quality" class="md-nav__link">
+  <a href="#other-why-this-formula-notes-in-the-repo" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tests and quality
+        Other “why this formula” notes in the repo
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        See also
       
     </span>
   </a>
@@ -623,45 +647,89 @@
   
 
 
-<h1 id="development">Development<a class="headerlink" href="#development" title="Permanent link">&para;</a></h1>
-<h2 id="layout-streamlit-app">Layout (Streamlit app)<a class="headerlink" href="#layout-streamlit-app" title="Permanent link">&para;</a></h2>
-<p>The primary UI is driven by <code>app.py</code>, which wires Streamlit page config, data loading, and view modules:</p>
+<h1 id="_1">Чому матиматика матиматюкається?<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h1>
+<p>This page is about <strong>where theory shows up in this project</strong>: comments, short docstrings, and the structure of the formulas themselves. Below are two typical topics (quaternions / Euler / gimbal lock; errors from double integration of IMU data) plus pointers to specific files.</p>
+<hr />
+<h2 id="theoretical-grounding-in-code-where-to-look">Theoretical grounding in code: where to look<a class="headerlink" href="#theoretical-grounding-in-code-where-to-look" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Area</th>
-<th>Role</th>
+<th>Topic</th>
+<th>Location in the repo</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>app.py</code></td>
-<td>Entry point, session state, orchestrates views</td>
+<td>Coordinate transforms, Haversine, local frames</td>
+<td><code>service/geo/geodesy.py</code></td>
 </tr>
 <tr>
-<td><code>data/</code></td>
-<td>Loading and parsing helpers for uploaded log bytes</td>
+<td>Trapezoidal integration of acceleration</td>
+<td><code>service/common/integration.py</code></td>
 </tr>
 <tr>
-<td><code>views/</code></td>
-<td>Streamlit panels: summary, map, telemetry toolbar, AI analysis</td>
+<td>Body→NED orientation, rotation matrix from Euler angles</td>
+<td><code>service/fusion/orientation.py</code></td>
 </tr>
 <tr>
-<td><code>ui/</code></td>
-<td>Shared styles and components</td>
+<td>EKF state prediction, Euler kinematics, gravity in NED</td>
+<td><code>service/fusion/ekf_core.py</code></td>
 </tr>
 <tr>
-<td><code>service/</code></td>
-<td>Backend logic (e.g. AI flight analysis)</td>
+<td>Metrics: dynamic acceleration, IMU-derived speed integral</td>
+<td><code>service/metrics/metrics.py</code></td>
 </tr>
 </tbody>
 </table>
-<h2 id="legacy-dash-dashboard">Legacy Dash dashboard<a class="headerlink" href="#legacy-dash-dashboard" title="Permanent link">&para;</a></h2>
-<p><code>drone_dashboard.py</code> is a self-contained Dash application: constants, <code>parse_log()</code>, <code>compute_metrics()</code>, panel builders, and CLI (<code>main</code>). It remains useful for the classic all-panels-at-once layout and HTML export.</p>
-<h2 id="dependencies">Dependencies<a class="headerlink" href="#dependencies" title="Permanent link">&para;</a></h2>
-<p>Runtime libraries are listed in <code>requirements.txt</code> (pymavlink, numpy, plotly, dash, streamlit, geopy, optional Google AI, python-dotenv). Documentation tooling is isolated in <code>requirements-docs.txt</code> so production installs do not require MkDocs.</p>
-<h2 id="tests-and-quality">Tests and quality<a class="headerlink" href="#tests-and-quality" title="Permanent link">&para;</a></h2>
-<p>Add or run tests according to your workflow; this page only reflects the current structure. When extending message types or metrics, keep parsing and analytics changes consistent between Dash and Streamlit paths if both are still supported.</p>
+<p>Good practice: a <strong>short comment next to the line that implements a formula</strong> (what is being integrated, which frame, what the accelerometer actually measures) so the “why” survives refactoring.</p>
+<hr />
+<h2 id="euler-angles-quaternions-and-gimbal-lock">Euler angles, quaternions, and gimbal lock<a class="headerlink" href="#euler-angles-quaternions-and-gimbal-lock" title="Permanent link">&para;</a></h2>
+<p><strong>Idea.</strong> Body attitude can be parameterized with Euler angles (roll, pitch, yaw). In a common ZYX formulation, the rates of those angles depend on <strong>tangent</strong> and <strong>cosine of pitch</strong> in denominators: when the <strong>tangent blows up</strong> or <strong>cosine goes to zero</strong> (e.g. pitch ≈ ±90°), you get a <strong>singularity</strong> known as <strong>gimbal lock</strong>—one degree of freedom becomes ill-conditioned and angular rates are poorly defined.</p>
+<p><strong>Quaternions</strong> (unit quaternions on S³) represent rotations without that class of singularity in the same parameterization; navigation filters often use them specifically to <strong>avoid gimbal lock</strong> over the full tilt range.</p>
+<p><strong>What Lift &amp; Drone does.</strong> In the EKF, attitude is stored as <strong>Euler angles</strong> in the state vector (<code>roll</code>, <code>pitch</code>, <code>yaw</code>), and body→navigation rotation uses an <strong>Euler-based matrix</strong> (<code>euler_to_rotation_matrix</code> in <code>service/fusion/orientation.py</code>). State prediction explicitly handles <strong>pitch singularity</strong>: when <strong>the absolute value of cos(pitch)</strong> is very small, a <strong>fallback</strong> (simplified) angle update is used—this is documented directly in code:</p>
+<div class="highlight"><span class="filename">service/fusion/ekf_core.py (excerpt)</span><pre><span></span><code>        <span class="c1"># Euler kinematics: convert body rates (p, q, r) to Euler rates</span>
+        <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">cp</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e-6</span><span class="p">:</span>  <span class="c1"># Prevent gimbal lock singularity</span>
+            <span class="n">roll</span> <span class="o">+=</span> <span class="p">(</span><span class="n">p</span> <span class="o">+</span> <span class="n">q</span> <span class="o">*</span> <span class="n">sr</span> <span class="o">*</span> <span class="n">tp</span> <span class="o">+</span> <span class="n">r</span> <span class="o">*</span> <span class="n">cr</span> <span class="o">*</span> <span class="n">tp</span><span class="p">)</span> <span class="o">*</span> <span class="n">dt</span>
+            <span class="n">pitch</span> <span class="o">+=</span> <span class="p">(</span><span class="n">q</span> <span class="o">*</span> <span class="n">cr</span> <span class="o">-</span> <span class="n">r</span> <span class="o">*</span> <span class="n">sr</span><span class="p">)</span> <span class="o">*</span> <span class="n">dt</span>
+            <span class="n">yaw</span> <span class="o">+=</span> <span class="p">(</span><span class="n">q</span> <span class="o">*</span> <span class="n">sr</span> <span class="o">/</span> <span class="n">cp</span> <span class="o">+</span> <span class="n">r</span> <span class="o">*</span> <span class="n">cr</span> <span class="o">/</span> <span class="n">cp</span><span class="p">)</span> <span class="o">*</span> <span class="n">dt</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Fallback if pitched near 90 degrees</span>
+            <span class="n">roll</span> <span class="o">+=</span> <span class="n">p</span> <span class="o">*</span> <span class="n">dt</span>
+            <span class="n">pitch</span> <span class="o">+=</span> <span class="n">q</span> <span class="o">*</span> <span class="n">dt</span>
+            <span class="n">yaw</span> <span class="o">+=</span> <span class="n">r</span> <span class="o">*</span> <span class="n">dt</span>
+</code></pre></div>
+<p>So <strong>the theory is in the comments</strong>: gimbal lock is named and the nature of the guard is clear. Moving the filter state to <strong>quaternions</strong> would be a <strong>different design</strong> (different state size and equations); this codebase documents a <strong>singularity workaround for Euler angles</strong>, not a quaternion state.</p>
+<hr />
+<h2 id="double-integration-of-imu-data-where-errors-come-from">Double integration of IMU data: where errors come from<a class="headerlink" href="#double-integration-of-imu-data-where-errors-come-from" title="Permanent link">&para;</a></h2>
+<p><strong>Idea.</strong> An accelerometer measures <strong>specific force</strong>: at rest it reads roughly “−g” along the vertical in the body frame. To get <strong>acceleration in an inertial/navigation frame</strong> you need attitude and a correct <strong>gravity subtraction</strong>—otherwise bogus acceleration integrates into velocity and <strong>drift</strong> grows over time.</p>
+<p><strong>Double integration</strong> (acceleration → velocity → position) on a <strong>bare IMU without aiding</strong> accumulates:</p>
+<ul>
+<li><strong>Bias</strong> and noise: velocity error typically grows with time; position error grows faster still.</li>
+<li><strong>Attitude errors</strong> mix axes, so gravity compensation <strong>drifts</strong>.</li>
+</ul>
+<p>That is why real systems almost always <strong>aid</strong> IMU position with GPS / baro / magnetometers (here: an EKF with IMU+GPS+ATT events in <code>service/fusion/ekf_runner.py</code>).</p>
+<p><strong>What Lift &amp; Drone does for <code>max_imu_speed_ms</code>.</strong> In <code>compute_metrics</code>, IMU speed uses <strong>trapezoidal integration</strong> of per-axis accelerations after adding gravity on the vertical axis for the velocity integral—see <code>integrate_velocity</code> and the module docstring in <code>service/common/integration.py</code>. That is an <strong>engineering display metric</strong>, not a claimed high-grade INS position solution. Comments in <code>ekf_core.py</code> explain <strong>specific force</strong>, <strong>g</strong>, and NED:</p>
+<div class="highlight"><span class="filename">service/fusion/ekf_core.py (excerpt)</span><pre><span></span><code>    <span class="c1"># Convert raw acceleration to dynamic acceleration in NED.</span>
+    <span class="c1"># In NED, gravity is a downward vector [0, 0, g].</span>
+    <span class="c1"># Accelerometer measures specific force: a_meas = a_true - g_vector.</span>
+    <span class="c1"># Therefore, a_true = a_meas + g_vector.</span>
+    <span class="n">acc_nav_dyn</span> <span class="o">=</span> <span class="n">acc_nav</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">acc_nav_dyn</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="n">GRAVITY_MS2</span>
+</code></pre></div>
+<p>That is <strong>mathematical explanation in comments</strong>: what the measurement means and how we move to “dynamic” acceleration in the navigation frame.</p>
+<hr />
+<h2 id="other-why-this-formula-notes-in-the-repo">Other “why this formula” notes in the repo<a class="headerlink" href="#other-why-this-formula-notes-in-the-repo" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Haversine</strong> in <code>service/geo/geodesy.py</code> — great-circle distance between two WGS84 points; the implementation matches the standard spherical formula.</li>
+<li><strong>Trapezoid</strong> in <code>trapz_step</code> — explicit average of two neighboring acceleration samples over a time step <code>dt</code>.</li>
+</ul>
+<p>When you add new transforms, briefly document the <strong>coordinate system</strong> (NED vs ENU, which way is “up”), <strong>units</strong>, and <strong>what the sensor actually outputs</strong>—then a page like this stays useful for future readers of the repository.</p>
+<hr />
+<h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../functionality/">Functionality</a> — how the EKF and metrics fit the app.</li>
+<li><a href="../development/">Development</a> — layout of <code>service/</code>.</li>
+</ul>
 
 
 

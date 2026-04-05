@@ -13,8 +13,10 @@
       
       
       
-        <link rel="prev" href="../run-service/">
+        <link rel="prev" href="..">
       
+      
+        <link rel="next" href="../ai-flight-analysis/">
       
       
         
@@ -25,7 +27,7 @@
     
     
       
-        <title>Development - Lift & Drone</title>
+        <title>Functionality - Lift & Drone</title>
       
     
     
@@ -76,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#development" class="md-skip">
+        <a href="#functionality" class="md-skip">
           Skip to content
         </a>
       
@@ -112,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Development
+              Functionality
             
           </span>
         </div>
@@ -284,10 +286,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../functionality/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Functionality
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -303,6 +332,164 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#end-to-end-pipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        End-to-end pipeline
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#log-parsing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Log parsing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#metrics-and-warnings" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Metrics and warnings
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#streamlit-application-apppy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Streamlit application (app.py)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Streamlit application (app.py)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sidebar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sidebar
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mission-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mission Summary
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#real-world-gps-trajectory-2d" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real-world GPS trajectory (2D)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ai-flight-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AI Flight Analysis
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#telemetry-panels-toolbar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Telemetry panels (toolbar)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#legacy-dash-dashboard-drone_dashboardpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Legacy Dash dashboard (drone_dashboard.py)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#theming-and-assets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Theming and assets
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-docs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related docs
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -419,37 +606,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Development
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../development/" class="md-nav__link">
         
   
   
@@ -465,70 +625,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#layout-streamlit-app" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Layout (Streamlit app)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#legacy-dash-dashboard" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Legacy Dash dashboard
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dependencies" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Dependencies
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#tests-and-quality" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Tests and quality
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -560,10 +656,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#layout-streamlit-app" class="md-nav__link">
+  <a href="#end-to-end-pipeline" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Layout (Streamlit app)
+        End-to-end pipeline
       
     </span>
   </a>
@@ -571,10 +667,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#legacy-dash-dashboard" class="md-nav__link">
+  <a href="#log-parsing" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Legacy Dash dashboard
+        Log parsing
       
     </span>
   </a>
@@ -582,10 +678,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#dependencies" class="md-nav__link">
+  <a href="#metrics-and-warnings" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Dependencies
+        Metrics and warnings
       
     </span>
   </a>
@@ -593,10 +689,104 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#tests-and-quality" class="md-nav__link">
+  <a href="#streamlit-application-apppy" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tests and quality
+        Streamlit application (app.py)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Streamlit application (app.py)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sidebar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Sidebar
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mission-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mission Summary
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#real-world-gps-trajectory-2d" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Real-world GPS trajectory (2D)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ai-flight-analysis" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AI Flight Analysis
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#telemetry-panels-toolbar" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Telemetry panels (toolbar)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#legacy-dash-dashboard-drone_dashboardpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Legacy Dash dashboard (drone_dashboard.py)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#theming-and-assets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Theming and assets
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related-docs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related docs
       
     </span>
   </a>
@@ -623,45 +813,95 @@
   
 
 
-<h1 id="development">Development<a class="headerlink" href="#development" title="Permanent link">&para;</a></h1>
-<h2 id="layout-streamlit-app">Layout (Streamlit app)<a class="headerlink" href="#layout-streamlit-app" title="Permanent link">&para;</a></h2>
-<p>The primary UI is driven by <code>app.py</code>, which wires Streamlit page config, data loading, and view modules:</p>
+<h1 id="functionality">Functionality<a class="headerlink" href="#functionality" title="Permanent link">&para;</a></h1>
+<p>Lift &amp; Drone ingests <strong>ArduPilot Dataflash <code>.bin</code> logs</strong>, runs a single processing pipeline, and presents results in a <strong>Streamlit</strong> UI (<code>app.py</code>). A <strong>legacy Plotly Dash</strong> app (<code>drone_dashboard.py</code>) reuses the same plot builders for an all-in-one layout and optional HTML export.</p>
+<hr />
+<h2 id="end-to-end-pipeline">End-to-end pipeline<a class="headerlink" href="#end-to-end-pipeline" title="Permanent link">&para;</a></h2>
+<p>When you upload a log, the app parses the binary file and runs:</p>
+<ol>
+<li><strong><code>parse_log</code></strong> — extract typed message streams (GPS, IMU, BAT, etc.).</li>
+<li><strong><code>run_ekf_on_log</code></strong> — optional EKF fusion for derived motion (when the pipeline produces data).</li>
+<li><strong><code>compute_metrics</code></strong> — mission metrics (distance, speeds, altitude, battery, warnings, etc.).</li>
+</ol>
+<p>Orchestration is centralized in <code>service/orchestrator.py</code>; the Streamlit loader calls <code>process_log_file()</code> so views do not import parser/metrics modules directly.</p>
+<hr />
+<h2 id="log-parsing">Log parsing<a class="headerlink" href="#log-parsing" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Format</strong>: Dataflash binary via <strong>pymavlink</strong>.</li>
+<li><strong>Message types</strong> used across analytics and UI include: <strong>ATT, GPS, BAT, VIBE, RCOU, RCIN, IMU, MODE, ERR, MSG, EV, BARO</strong> (and related fields inside those streams).</li>
+<li><strong>Time</strong>: Microsecond timestamps are normalized to <strong>seconds relative to mission start</strong> for plotting and metrics.</li>
+</ul>
+<hr />
+<h2 id="metrics-and-warnings">Metrics and warnings<a class="headerlink" href="#metrics-and-warnings" title="Permanent link">&para;</a></h2>
+<p>Mission metrics (distance, duration, GPS speeds, IMU acceleration and integrated speed, altitude bands, battery current and energy, EKF peaks when available, gyro-extremes notice, etc.) are computed in <code>service/metrics/metrics.py</code>. The <strong>Mission Summary</strong> stat cards surface the main values; an expander lists <strong>metric notices</strong> (distance, altitude gain, battery, gyro) when warnings exist.</p>
+<p>For a field-level description of how distance, speeds, IMU, and battery numbers are defined, see the <strong>Analytics &amp; Metrics</strong> section in the <a href="https://github.com/IrynaBk/liftanddrone/blob/main/README.md">project README</a>.</p>
+<hr />
+<h2 id="streamlit-application-apppy">Streamlit application (<code>app.py</code>)<a class="headerlink" href="#streamlit-application-apppy" title="Permanent link">&para;</a></h2>
+<h3 id="sidebar">Sidebar<a class="headerlink" href="#sidebar" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Upload <strong>one or two</strong> <code>.bin</code> files; with two logs, <strong>radio buttons</strong> choose which file drives the dashboard.</li>
+<li><strong>Color trajectory by</strong>: speed, altitude, or elapsed time (affects <strong>2D map</strong> and <strong>3D trajectory</strong> coloring).</li>
+<li><strong>Quick stats</strong>: duration, distance, max speed, energy (when available).</li>
+<li><strong>Firmware</strong> line when a version string is found in <strong>MSG</strong> records.</li>
+</ul>
+<h3 id="mission-summary">Mission Summary<a class="headerlink" href="#mission-summary" title="Permanent link">&para;</a></h3>
+<p>A grid of <strong>stat cards</strong> (duration, distance, speed breakdown, altitude ASL and above takeoff, max acceleration, energy, average satellites, etc.) with optional per-metric warnings.</p>
+<h3 id="real-world-gps-trajectory-2d">Real-world GPS trajectory (2D)<a class="headerlink" href="#real-world-gps-trajectory-2d" title="Permanent link">&para;</a></h3>
+<p>Interactive <strong>Plotly</strong> map with OpenStreetMap tiles, trajectory coloring from sidebar settings, takeoff/landing context, and <strong>mission bounds</strong> details: reverse-geocoded <strong>takeoff/landing</strong> hints (Nominatim), coordinates, and <strong>valid GPS points</strong> vs total with average HDOP/satellites for filtered points.</p>
+<h3 id="ai-flight-analysis">AI Flight Analysis<a class="headerlink" href="#ai-flight-analysis" title="Permanent link">&para;</a></h3>
+<p>Optional <strong>Google Gemini</strong> post-flight text based on the <strong>metrics dict only</strong> (not the raw log): <strong>Short</strong> / <strong>Detailed</strong> reports or a <strong>Custom question</strong>, with results cached per log and mode. Requires a <strong><code>GEMINI_API_KEY</code></strong> or an in-session key from the sidebar expander.</p>
+<p>For model id, prompts, what data is sent to the API, and privacy notes, see <strong><a href="../ai-flight-analysis/">AI flight analysis (Gemini)</a></strong>.</p>
+<h3 id="telemetry-panels-toolbar">Telemetry panels (toolbar)<a class="headerlink" href="#telemetry-panels-toolbar" title="Permanent link">&para;</a></h3>
+<p>Switchable <strong>Plotly</strong> views (pills or radio, depending on Streamlit version):</p>
 <table>
 <thead>
 <tr>
-<th>Area</th>
-<th>Role</th>
+<th>Panel</th>
+<th>Content</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>app.py</code></td>
-<td>Entry point, session state, orchestrates views</td>
+<td><strong>Battery</strong></td>
+<td>Voltage and current over time</td>
 </tr>
 <tr>
-<td><code>data/</code></td>
-<td>Loading and parsing helpers for uploaded log bytes</td>
+<td><strong>Vibration &amp; Motors</strong></td>
+<td>Vibration axes and motor PWM outputs</td>
 </tr>
 <tr>
-<td><code>views/</code></td>
-<td>Streamlit panels: summary, map, telemetry toolbar, AI analysis</td>
+<td><strong>Attitude</strong></td>
+<td>Actual vs desired attitude</td>
 </tr>
 <tr>
-<td><code>ui/</code></td>
-<td>Shared styles and components</td>
+<td><strong>Events</strong></td>
+<td>Mode changes, errors, and events timeline</td>
 </tr>
 <tr>
-<td><code>service/</code></td>
-<td>Backend logic (e.g. AI flight analysis)</td>
+<td><strong>3D Trajectory</strong></td>
+<td>Local <strong>E–N–U</strong> path with coloring tied to the same <strong>speed / altitude / time</strong> choice as the map</td>
 </tr>
 </tbody>
 </table>
-<h2 id="legacy-dash-dashboard">Legacy Dash dashboard<a class="headerlink" href="#legacy-dash-dashboard" title="Permanent link">&para;</a></h2>
-<p><code>drone_dashboard.py</code> is a self-contained Dash application: constants, <code>parse_log()</code>, <code>compute_metrics()</code>, panel builders, and CLI (<code>main</code>). It remains useful for the classic all-panels-at-once layout and HTML export.</p>
-<h2 id="dependencies">Dependencies<a class="headerlink" href="#dependencies" title="Permanent link">&para;</a></h2>
-<p>Runtime libraries are listed in <code>requirements.txt</code> (pymavlink, numpy, plotly, dash, streamlit, geopy, optional Google AI, python-dotenv). Documentation tooling is isolated in <code>requirements-docs.txt</code> so production installs do not require MkDocs.</p>
-<h2 id="tests-and-quality">Tests and quality<a class="headerlink" href="#tests-and-quality" title="Permanent link">&para;</a></h2>
-<p>Add or run tests according to your workflow; this page only reflects the current structure. When extending message types or metrics, keep parsing and analytics changes consistent between Dash and Streamlit paths if both are still supported.</p>
+<p>Panel builders live in <code>drone_dashboard.py</code> and are imported by <code>views/telemetry.py</code>.</p>
+<hr />
+<h2 id="legacy-dash-dashboard-drone_dashboardpy">Legacy Dash dashboard (<code>drone_dashboard.py</code>)<a class="headerlink" href="#legacy-dash-dashboard-drone_dashboardpy" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>CLI</strong>: <code>python drone_dashboard.py path/to/log.bin</code> — serves a multi-panel layout (typically port <strong>8050</strong>).</li>
+<li><strong>Static export</strong>: <code>--export report.html</code> writes a standalone HTML file.</li>
+<li>Includes a <strong>GPS health</strong> style panel in the classic layout that is not wired into the Streamlit toolbar (Streamlit focuses the map + filtered GPS stats instead).</li>
+</ul>
+<hr />
+<h2 id="theming-and-assets">Theming and assets<a class="headerlink" href="#theming-and-assets" title="Permanent link">&para;</a></h2>
+<p>The Streamlit app uses project <strong>CSS</strong> under <code>ui/</code> and <code>.streamlit/config.toml</code> for a dark, dashboard-style appearance.</p>
+<hr />
+<h2 id="related-docs">Related docs<a class="headerlink" href="#related-docs" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../why-math/">Why math works</a> — mathematical rationale in comments (Euler, IMU, Haversine).</li>
+<li><a href="../ai-flight-analysis/">AI flight analysis</a> — Gemini modes, prompts, and API behaviour.</li>
+<li><a href="../run-service/">Run the service</a> — install and launch the Streamlit app step by step.</li>
+<li><a href="../development/">Development</a> — repository layout for contributors.</li>
+</ul>
 
 
 

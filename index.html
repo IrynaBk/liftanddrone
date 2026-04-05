@@ -14,7 +14,7 @@
       
       
       
-        <link rel="next" href="getting-started/">
+        <link rel="next" href="functionality/">
       
       
         
@@ -356,6 +356,87 @@
   
   
     <li class="md-nav__item">
+      <a href="functionality/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Functionality
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="ai-flight-analysis/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI flight analysis
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="why-math/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Why math works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="getting-started/" class="md-nav__link">
         
   
@@ -501,6 +582,7 @@
 <h1 id="lift-drone">Lift &amp; Drone<a class="headerlink" href="#lift-drone" title="Permanent link">&para;</a></h1>
 <p><strong>UAV telemetry analysis and interactive dashboards</strong> for ArduPilot Dataflash binary logs: parsing, mission metrics, 2D maps, 3D trajectory, and a modern Streamlit UI.</p>
 <h2 id="capabilities">Capabilities<a class="headerlink" href="#capabilities" title="Permanent link">&para;</a></h2>
+<p>See <strong><a href="functionality/">Functionality</a></strong> for a full walkthrough of the pipeline, UI, and legacy Dash mode.</p>
 <ul>
 <li><strong>Log parsing</strong> — ArduPilot <code>.bin</code> via pymavlink; relative timestamps and common message types (ATT, GPS, BAT, VIBE, RCOU, and more).</li>
 <li><strong>Analytics</strong> — Distance (Haversine), velocity integration, duration, speeds, altitude, battery energy, and related metrics.</li>
@@ -509,6 +591,9 @@
 </ul>
 <h2 id="where-to-go-next">Where to go next<a class="headerlink" href="#where-to-go-next" title="Permanent link">&para;</a></h2>
 <ul>
+<li><a href="functionality/">Functionality</a> — What the app does: pipeline, Streamlit areas, panels, Dash export, and how it maps to the code.</li>
+<li><a href="ai-flight-analysis/">AI flight analysis</a> — Gemini integration: modes, metrics sent to the API, keys, caching.</li>
+<li><a href="why-math/">Why math works</a> — theory in code comments: Euler vs gimbal lock, IMU integration, Haversine.</li>
 <li><a href="run-service/">Run the service</a> — Step-by-step: venv, install, optional Gemini key, <code>streamlit run app.py</code>, and using the UI.</li>
 <li><a href="getting-started/">Getting started</a> — Quick commands for Streamlit, Dash, docs build, and exports.</li>
 <li><a href="development/">Development</a> — How the repository is organized and how it relates to the legacy Dash layout.</li>

@@ -13,8 +13,10 @@
       
       
       
-        <link rel="prev" href="../run-service/">
+        <link rel="prev" href="../functionality/">
       
+      
+        <link rel="next" href="../why-math/">
       
       
         
@@ -25,7 +27,7 @@
     
     
       
-        <title>Development - Lift & Drone</title>
+        <title>AI flight analysis - Lift & Drone</title>
       
     
     
@@ -76,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#development" class="md-skip">
+        <a href="#ai-flight-analysis-gemini" class="md-skip">
           Skip to content
         </a>
       
@@ -112,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Development
+              AI flight analysis
             
           </span>
         </div>
@@ -311,10 +313,37 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../ai-flight-analysis/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    AI flight analysis
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -330,6 +359,114 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-runs-where" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What runs where
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#api-key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        API key
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#analysis-modes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Analysis modes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-sent-to-the-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is sent to the model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ui-behaviour" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UI behaviour
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#privacy-and-cost" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Privacy and cost
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -419,37 +556,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Development
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../development/" class="md-nav__link">
         
   
   
@@ -465,70 +575,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#layout-streamlit-app" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Layout (Streamlit app)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#legacy-dash-dashboard" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Legacy Dash dashboard
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#dependencies" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Dependencies
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#tests-and-quality" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Tests and quality
-      
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -560,10 +606,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#layout-streamlit-app" class="md-nav__link">
+  <a href="#what-runs-where" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Layout (Streamlit app)
+        What runs where
       
     </span>
   </a>
@@ -571,10 +617,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#legacy-dash-dashboard" class="md-nav__link">
+  <a href="#api-key" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Legacy Dash dashboard
+        API key
       
     </span>
   </a>
@@ -582,10 +628,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#dependencies" class="md-nav__link">
+  <a href="#model" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Dependencies
+        Model
       
     </span>
   </a>
@@ -593,10 +639,54 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#tests-and-quality" class="md-nav__link">
+  <a href="#analysis-modes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Tests and quality
+        Analysis modes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-sent-to-the-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is sent to the model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ui-behaviour" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UI behaviour
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#privacy-and-cost" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Privacy and cost
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#related" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Related
       
     </span>
   </a>
@@ -623,45 +713,103 @@
   
 
 
-<h1 id="development">Development<a class="headerlink" href="#development" title="Permanent link">&para;</a></h1>
-<h2 id="layout-streamlit-app">Layout (Streamlit app)<a class="headerlink" href="#layout-streamlit-app" title="Permanent link">&para;</a></h2>
-<p>The primary UI is driven by <code>app.py</code>, which wires Streamlit page config, data loading, and view modules:</p>
+<h1 id="ai-flight-analysis-gemini">AI flight analysis (Gemini)<a class="headerlink" href="#ai-flight-analysis-gemini" title="Permanent link">&para;</a></h1>
+<p>The <strong>AI Flight Analysis</strong> block in the Streamlit app (<code>views/ai_analysis.py</code>) calls <strong>Google Gemini</strong> to turn <strong>already-computed mission metrics</strong> into a short text report or a custom question-and-answer reply. It does <strong>not</strong> send the raw <code>.bin</code> log or full time series—only the structured <code>metrics</code> dict from <code>compute_metrics()</code>.</p>
+<hr />
+<h2 id="what-runs-where">What runs where<a class="headerlink" href="#what-runs-where" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Area</th>
+<th>Piece</th>
 <th>Role</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>app.py</code></td>
-<td>Entry point, session state, orchestrates views</td>
+<td><code>views/ai_analysis.py</code></td>
+<td>Streamlit UI: API key, mode picker, button, result display, session cache</td>
 </tr>
 <tr>
-<td><code>data/</code></td>
-<td>Loading and parsing helpers for uploaded log bytes</td>
+<td><code>service/ai/flight_analysis.py</code></td>
+<td>Builds the metrics text block, picks system prompts, calls the Gemini API</td>
 </tr>
 <tr>
-<td><code>views/</code></td>
-<td>Streamlit panels: summary, map, telemetry toolbar, AI analysis</td>
-</tr>
-<tr>
-<td><code>ui/</code></td>
-<td>Shared styles and components</td>
-</tr>
-<tr>
-<td><code>service/</code></td>
-<td>Backend logic (e.g. AI flight analysis)</td>
+<td><code>google-generativeai</code></td>
+<td>Python client (see <code>requirements.txt</code>)</td>
 </tr>
 </tbody>
 </table>
-<h2 id="legacy-dash-dashboard">Legacy Dash dashboard<a class="headerlink" href="#legacy-dash-dashboard" title="Permanent link">&para;</a></h2>
-<p><code>drone_dashboard.py</code> is a self-contained Dash application: constants, <code>parse_log()</code>, <code>compute_metrics()</code>, panel builders, and CLI (<code>main</code>). It remains useful for the classic all-panels-at-once layout and HTML export.</p>
-<h2 id="dependencies">Dependencies<a class="headerlink" href="#dependencies" title="Permanent link">&para;</a></h2>
-<p>Runtime libraries are listed in <code>requirements.txt</code> (pymavlink, numpy, plotly, dash, streamlit, geopy, optional Google AI, python-dotenv). Documentation tooling is isolated in <code>requirements-docs.txt</code> so production installs do not require MkDocs.</p>
-<h2 id="tests-and-quality">Tests and quality<a class="headerlink" href="#tests-and-quality" title="Permanent link">&para;</a></h2>
-<p>Add or run tests according to your workflow; this page only reflects the current structure. When extending message types or metrics, keep parsing and analytics changes consistent between Dash and Streamlit paths if both are still supported.</p>
+<p>The legacy <strong>Dash</strong> app (<code>drone_dashboard.py</code>) does <strong>not</strong> include this feature.</p>
+<hr />
+<h2 id="api-key">API key<a class="headerlink" href="#api-key" title="Permanent link">&para;</a></h2>
+<p>The app reads <strong><code>GEMINI_API_KEY</code></strong> from the environment (<code>python-dotenv</code> loads <code>.env</code> at startup). If unset, the UI shows an expander where you can paste a key for the current session (password field). Keys are obtained from <a href="https://aistudio.google.com/app/apikey">Google AI Studio</a>.</p>
+<p>Setup options are described in <a href="../run-service/#4-optional-enable-ai-flight-analysis">Run the service — step 4</a>.</p>
+<hr />
+<h2 id="model">Model<a class="headerlink" href="#model" title="Permanent link">&para;</a></h2>
+<p>The service uses a single model id:</p>
+<ul>
+<li><strong><code>gemini-3-flash-preview</code></strong> (<code>_MODEL_NAME</code> in <code>service/ai/flight_analysis.py</code>)</li>
+</ul>
+<p>Google may rename or retire preview models; if generation fails after an API change, update <code>_MODEL_NAME</code> to a current Gemini model your key supports.</p>
+<hr />
+<h2 id="analysis-modes">Analysis modes<a class="headerlink" href="#analysis-modes" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>UI label</th>
+<th>Internal <code>mode</code></th>
+<th>Behaviour</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Short Report</strong></td>
+<td><code>short</code></td>
+<td>Brief summary (system prompt caps at ~150 words): key stats, optional energy line, up to two safety notes</td>
+</tr>
+<tr>
+<td><strong>Detailed Report</strong></td>
+<td><code>detailed</code></td>
+<td>Full structured report: overview, performance, energy, GPS quality, vibration/mechanical comments from gyro warnings, safety, recommendations</td>
+</tr>
+<tr>
+<td><strong>Custom Question</strong></td>
+<td><code>custom</code></td>
+<td>Your question in a text area, plus the same metrics context block</td>
+</tr>
+</tbody>
+</table>
+<p>System instructions ask for <strong>professional, concise Markdown</strong>, <strong>bullet points inside sections</strong>, and <strong>no invented numbers</strong>—if a metric is missing or N/A, the model is told to say so.</p>
+<hr />
+<h2 id="what-is-sent-to-the-model">What is sent to the model<a class="headerlink" href="#what-is-sent-to-the-model" title="Permanent link">&para;</a></h2>
+<p><code>build_metrics_prompt()</code> serializes the metrics dict into a fixed Markdown-style block, including when present:</p>
+<ul>
+<li>Duration, distance  </li>
+<li>Max total / horizontal / vertical speed  </li>
+<li>Takeoff and max altitude (MSL), max above takeoff, altitude gain  </li>
+<li>Max gravity-compensated acceleration  </li>
+<li>Energy (mAh), average current  </li>
+<li>Average satellites  </li>
+<li>Warning strings: distance, altitude gain, battery, gyro extremes  </li>
+</ul>
+<p>If <strong><code>ekf_available</code></strong> is true, <strong>EKF max speeds</strong> (total, horizontal, vertical) are appended.</p>
+<p>The user <strong>custom</strong> mode prepends your question, then appends this metrics block. Other modes prepend a task-specific instruction (“summarise…”, “produce a full report…”) before the metrics block.</p>
+<hr />
+<h2 id="ui-behaviour">UI behaviour<a class="headerlink" href="#ui-behaviour" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Run</strong>: Click <strong>Analyse flight with Gemini</strong> (disabled in custom mode until the question is non-empty). A spinner runs while <code>generate_content</code> executes.  </li>
+<li><strong>Errors</strong>: Exceptions are shown as Markdown starting with <code>**API Error:**</code>.  </li>
+<li><strong>Cache</strong>: Results are stored in <strong><code>st.session_state</code></strong> under a key that includes <strong><code>file_key</code></strong> (which log is active), <strong><code>mode</code></strong>, and <strong>custom question</strong> text, so switching files or modes does not overwrite unrelated results.</li>
+</ul>
+<hr />
+<h2 id="privacy-and-cost">Privacy and cost<a class="headerlink" href="#privacy-and-cost" title="Permanent link">&para;</a></h2>
+<p>Sending a report invokes <strong>Google’s generative AI API</strong> with the metrics text above. Treat the API key like any secret; restrict keys in Google Cloud / AI Studio as you would for production. Usage may be <strong>metered or billed</strong> according to your Google account and model pricing.</p>
+<hr />
+<h2 id="related">Related<a class="headerlink" href="#related" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../functionality/">Functionality</a> — where AI fits in the Streamlit layout  </li>
+<li><a href="../run-service/">Run the service</a> — environment and <code>.env</code> for local runs  </li>
+</ul>
 
 
 
