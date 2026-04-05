@@ -15,132 +15,32 @@ Dependencies:
 import sys
 import argparse
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional
-import math
-from datetime import datetime
+from typing import Dict, List
 
 import numpy as np
 import plotly.graph_objects as go
-import plotly.express as px
 from plotly.subplots import make_subplots
 import dash
-from dash import dcc, html, Input, Output, State
+from dash import dcc, html, Input, Output
 from pymavlink import mavutil
 
-# ============================================================================
-# CONSTANTS
-# ============================================================================
-
-EARTH_RADIUS_M = 6_371_000  # WGS-84 Earth radius in meters
-LOW_VOLTAGE_THRESHOLD = 3.5  # Volts per cell
-VIBE_WARNING_THRESHOLD = 30  # m/s²
-VIBE_CRITICAL_THRESHOLD = 60  # m/s²
-MOTOR_MAX_PWM = 2000  # Microseconds (μs)
-MOTOR_MIN_PWM = 1000  # Microseconds (μs)
-MOTOR_SATURATION_MARGIN = 50  # PWM units from max/min
-
-# GPS filtering thresholds
-MIN_SATS = 6  # Minimum satellite count for valid fix
-MAX_HDOP = 2.5  # Maximum HDOP for valid fix
-_ALT_MEDIAN_K = 7  # median filter window (odd, capped by track length)
-_MAX_PLAUSIBLE_H_SPEED = 200.0  # m/s; reject GPS segments implying higher horizontal speed
-
-# Message types to extract
-MESSAGE_TYPES = ['ATT', 'GPS', 'BAT', 'VIBE', 'RCOU', 'RCIN', 'IMU', 'MODE', 'ERR', 'MSG', 'EV', 'BARO']
-
-# ============================================================================
-# UTILITY FUNCTIONS
-# ============================================================================
-
-
-def haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-    """
-    Compute great-circle distance between two WGS-84 coordinates.
-    
-    Args:
-        lat1, lon1: Starting latitude, longitude in decimal degrees
-        lat2, lon2: Ending latitude, longitude in decimal degrees
-        
-    Returns:
-        Distance in meters
-    """
-    lat1_rad = math.radians(lat1)
-    lat2_rad = math.radians(lat2)
-    dlat = math.radians(lat2 - lat1)
-    dlon = math.radians(lon2 - lon1)
-    
-    a = (math.sin(dlat / 2) ** 2 +
-         math.cos(lat1_rad) * math.cos(lat2_rad) * math.sin(dlon / 2) ** 2)
-    c = 2 * math.asin(math.sqrt(a))
-    
-    return EARTH_RADIUS_M * c
-
-
-_haversine = haversine
-
-
-def _median_filter(values: List[float], k: int) -> List[float]:
-    """Sliding-window median with edge padding. k must be odd."""
-    pad = k // 2
-    arr = np.asarray(values, dtype=float)
-    padded = np.pad(arr, pad, mode="edge")
-    out = np.empty_like(arr)
-    for i in range(len(arr)):
-        out[i] = np.median(padded[i : i + k])
-    return out.tolist()
-
-
-def integrate_velocity(accel_array: np.ndarray, time_array: np.ndarray) -> np.ndarray:
-    """
-    Integrate acceleration over time to produce velocity using trapezoidal rule.
-    
-    Args:
-        accel_array: 1D array of accelerations (m/s²)
-        time_array: 1D array of timestamps (seconds)
-        
-    Returns:
-        1D velocity array (m/s) with initial velocity = 0
-    """
-    if len(accel_array) < 2:
-        return accel_array
-    
-    # Trapezoidal integration: cumsum of (a0 + a1) / 2 * dt
-    velocity = np.zeros_like(accel_array, dtype=float)
-    for i in range(1, len(accel_array)):
-        dt = time_array[i] - time_array[i - 1]
-        if dt > 0:  # Guard against zero time deltas
-            velocity[i] = velocity[i - 1] + (accel_array[i - 1] + accel_array[i]) / 2.0 * dt
-    
-    return velocity
-
-
-def wgs84_to_enu(lat: float, lon: float, alt: float,
-                 lat0: float, lon0: float, alt0: float) -> Tuple[float, float, float]:
-    """
-    Convert WGS-84 geodetic coordinates to local East-North-Up (ENU) Cartesian coordinates.
-    
-    Uses flat-Earth approximation (valid for scales < 10 km).
-    
-    Args:
-        lat, lon, alt: Target point in WGS-84 (degrees, meters MSL)
-        lat0, lon0, alt0: Origin point in WGS-84 (degrees, meters MSL)
-        
-    Returns:
-        (east, north, up) tuple in meters relative to origin
-    """
-    lat0_rad = math.radians(lat0)
-    
-    # East: approximated as arc-length along latitude circle
-    east = (lon - lon0) * math.cos(lat0_rad) * EARTH_RADIUS_M * math.pi / 180.0
-    
-    # North: approximated as arc-length along meridian
-    north = (lat - lat0) * EARTH_RADIUS_M * math.pi / 180.0
-    
-    # Up: simple altitude difference
-    up = alt - alt0
-    
-    return east, north, up
-
+from services.constants import (
+    EARTH_RADIUS_M,
+    LOW_VOLTAGE_THRESHOLD,
+    MAX_HDOP,
+    MIN_SATS,
+    MOTOR_MAX_PWM,
+    MOTOR_MIN_PWM,
+    MOTOR_SATURATION_MARGIN,
+    MESSAGE_TYPES,
+    VIBE_CRITICAL_THRESHOLD,
+    VIBE_WARNING_THRESHOLD,
+)
+from services.geo import haversine, integrate_velocity, wgs84_to_enu
+from services.gps_quality import filter_gps_by_quality
+from services.map_view_service import compute_map_view_from_trajectory
+from services.metrics import compute_metrics
+from services.mission_bounds_service import compute_mission_bounds_stats
 
 # ============================================================================
 # LOG PARSING
@@ -210,136 +110,6 @@ def parse_log(filepath: str) -> Dict[str, List[Dict]]:
             print(f"  ✓ {msg_type}: {msg_counts[msg_type]:,} records")
     
     return data
-
-
-# ============================================================================
-# METRICS COMPUTATION
-# ============================================================================
-
-
-def compute_metrics(data: Dict[str, List[Dict]]) -> Dict:
-    """
-    Compute all mission metrics from parsed log data.
-    
-    Args:
-        data: Dictionary of message lists from parse_log()
-        
-    Returns:
-        Dictionary of computed metrics with human-readable keys
-    """
-    metrics = {}
-    
-    # ---- Flight Duration ----
-    gps_data = data.get('GPS', [])
-    imu_data = data.get('IMU', [])
-    bat_data = data.get('BAT', [])
-    att_data = data.get('ATT', [])
-    rcou_data = data.get('RCOU', [])
-    vibe_data = data.get('VIBE', [])
-    
-    if gps_data:
-        duration_s = gps_data[-1]['TimeS'] - gps_data[0]['TimeS']
-        metrics['duration_s'] = duration_s
-        minutes, seconds = divmod(int(duration_s), 60)
-        metrics['duration_str'] = f"{minutes}:{seconds:02d}"
-    else:
-        metrics['duration_s'] = 0
-        metrics['duration_str'] = "N/A"
-    
-    # ------------------------------------------------------------------
-    # Horizontal distance and altitude gain (GPS + Haversine)
-    # ------------------------------------------------------------------
-    metrics['distance_m'] = 0.0
-    metrics['max_alt_m'] = 0.0
-    metrics['min_alt_m'] = 0.0
-    metrics['alt_gain_m'] = 0.0
-
-    if gps_data:
-        gps_records = gps_data
-        altitudes = [r.get('Alt', 0) for r in gps_records]
-        k_alt = max(3, min(_ALT_MEDIAN_K, len(altitudes)) | 1)  # odd, ≥3
-        alt_smooth = _median_filter(altitudes, k=k_alt) if len(altitudes) >= 3 else altitudes
-
-        seg_h_dists: List[float] = []
-        for i in range(1, len(gps_records)):
-            prev, curr = gps_records[i - 1], gps_records[i]
-            prev_us = prev.get('TimeUS')
-            curr_us = curr.get('TimeUS')
-            if prev_us is not None and curr_us is not None:
-                dt = (curr_us - prev_us) / 1_000_000.0
-            else:
-                dt = curr['TimeS'] - prev['TimeS']
-            if dt <= 0:
-                continue
-            lat1 = prev.get('Lat', 0)
-            lon1 = prev.get('Lng', 0)
-            lat2 = curr.get('Lat', 0)
-            lon2 = curr.get('Lng', 0)
-            if lat1 != 0 and lon1 != 0 and lat2 != 0 and lon2 != 0:
-                h_dist = _haversine(lat1, lon1, lat2, lon2)
-                if h_dist / dt <= _MAX_PLAUSIBLE_H_SPEED:
-                    seg_h_dists.append(h_dist)
-
-        total_distance_m = sum(seg_h_dists)
-        metrics['distance_m'] = total_distance_m
-
-        metrics['max_alt_m'] = max(alt_smooth) if alt_smooth else 0.0
-        metrics['min_alt_m'] = min(alt_smooth) if alt_smooth else 0.0
-        metrics['alt_gain_m'] = metrics['max_alt_m'] - metrics['min_alt_m']
-    
-    # ---- Max Horizontal Speed ----
-    if gps_data:
-        speeds = [msg.get('Spd', 0) for msg in gps_data]
-        max_speed_ms = max(speeds) if speeds else 0.0
-        metrics['max_h_speed_ms'] = max_speed_ms
-    else:
-        metrics['max_h_speed_ms'] = 0.0
-    
-    # ---- Max Vertical Speed ----
-    if len(gps_data) > 1:
-        alts = [msg.get('Alt', 0) for msg in gps_data]
-        times = [msg['TimeS'] for msg in gps_data]
-        max_v_speed = 0.0
-        
-        for i in range(1, len(alts)):
-            dt = times[i] - times[i - 1]
-            if dt > 0:
-                v_speed = abs(alts[i] - alts[i - 1]) / dt
-                max_v_speed = max(max_v_speed, v_speed)
-        
-        metrics['max_v_speed_ms'] = max_v_speed
-    else:
-        metrics['max_v_speed_ms'] = 0.0
-    
-    # ---- Max Acceleration ----
-    if imu_data:
-        max_accel = 0.0
-        for msg in imu_data:
-            ax = msg.get('AccX', 0)
-            ay = msg.get('AccY', 0)
-            az = msg.get('AccZ', 0)
-            
-            # Magnitude of acceleration in m/s²
-            accel_mag = math.sqrt(ax**2 + ay**2 + az**2)
-            max_accel = max(max_accel, accel_mag)
-        
-        metrics['max_accel_ms2'] = max_accel
-    else:
-        metrics['max_accel_ms2'] = 0.0
-    
-    # ---- Average Hover Current ----
-    if bat_data:
-        currents = [msg.get('Curr', 0) for msg in bat_data]
-        metrics['avg_current_a'] = np.mean(currents) if currents else 0.0
-        
-        # Total energy: mAh (use last CurrTot value or compute from integration)
-        curr_tots = [msg.get('CurrTot', 0) for msg in bat_data]
-        metrics['energy_used_mah'] = curr_tots[-1] if curr_tots else 0.0
-    else:
-        metrics['avg_current_a'] = 0.0
-        metrics['energy_used_mah'] = 0.0
-    
-    return metrics
 
 
 # ============================================================================
@@ -936,70 +706,6 @@ def build_3d_trajectory(data: Dict, color_by: str = 'speed') -> go.Figure:
     return fig
 
 
-# Padding around the GPS path when framing the 2D map: 20% of trajectory span per axis
-# (10% margin on each side of the north–south and east–west extent).
-MAP_TRAJECTORY_PADDING_FRAC = 0.2
-
-
-def compute_map_view_from_trajectory(
-    lats: List[float],
-    lons: List[float],
-    width_px: float = 960.0,
-    height_px: float = 600.0,
-    padding_frac: float = MAP_TRAJECTORY_PADDING_FRAC,
-) -> Tuple[float, float, float]:
-    """
-    Center and zoom for ``layout.map`` so the view fits takeoff → landing path
-    (all valid GPS points) with extra margin: ``padding_frac`` × trajectory span
-    on each side (north/south and east/west).
-
-    Takeoff / landing are ``lats[0], lons[0]`` and ``lats[-1], lons[-1]``; the
-    bounding box uses min/max over the full trajectory so detours stay in frame.
-    """
-    if len(lats) < 2 or len(lons) < 2:
-        return (float(lats[0]), float(lons[0]), 16.0)
-
-    lat_to, lon_to = lats[0], lons[0]
-    lat_ld, lon_ld = lats[-1], lons[-1]
-
-    lat_min_raw, lat_max_raw = min(lats), max(lats)
-    lon_min_raw, lon_max_raw = min(lons), max(lons)
-
-    lat_span = lat_max_raw - lat_min_raw
-    lon_span = lon_max_raw - lon_min_raw
-
-    if lat_span < 1e-9 and lon_span < 1e-9:
-        return ((lat_to + lat_ld) / 2.0, (lon_to + lon_ld) / 2.0, 17.0)
-
-    # Degenerate line: inflate so zoom math is stable
-    if lat_span < 0.0001:
-        lat_span = 0.01
-    if lon_span < 0.0001:
-        lon_span = 0.01
-
-    dlat = padding_frac * lat_span
-    dlon = padding_frac * lon_span
-
-    lat_min = lat_min_raw - dlat
-    lat_max = lat_max_raw + dlat
-    lon_min = lon_min_raw - dlon
-    lon_max = lon_max_raw + dlon
-
-    lat_range = lat_max - lat_min
-    lon_range = lon_max - lon_min
-
-    lat_center = (lat_min + lat_max) / 2.0
-    lon_center = (lon_min + lon_max) / 2.0
-    cos_lat = max(math.cos(math.radians(lat_center)), 0.2)
-
-    zoom_lon = math.log2(360.0 * width_px * cos_lat / (256.0 * lon_range))
-    zoom_lat = math.log2(180.0 * height_px / (256.0 * lat_range))
-    zoom = min(zoom_lon, zoom_lat)
-
-    zoom = max(8.0, min(20.0, zoom))
-    return (lat_center, lon_center, zoom)
-
-
 def build_2d_map_panel(data: Dict, color_by: str = 'speed') -> go.Figure:
     """
     Builds an interactive 2D map of the drone's real-world GPS trajectory.
@@ -1021,11 +727,7 @@ def build_2d_map_panel(data: Dict, color_by: str = 'speed') -> go.Figure:
         fig.add_annotation(text="No GPS data available for 2D map")
         return fig
     
-    # Filter GPS records for quality
-    filtered_gps = [
-        msg for msg in gps_data
-        if msg.get('HDop', 999) < MAX_HDOP and msg.get('NSats', 0) >= MIN_SATS
-    ]
+    filtered_gps = filter_gps_by_quality(gps_data)
     
     if len(filtered_gps) < 10:
         fig = go.Figure()
@@ -1164,37 +866,20 @@ def build_mission_bounds_info(data: Dict) -> html.Div:
         A Dash html.Div component with mission statistics
     """
     gps_data = data.get('GPS', [])
+    stats = compute_mission_bounds_stats(gps_data)
     
-    # Filter for quality GPS
-    filtered_gps = [
-        msg for msg in gps_data
-        if msg.get('HDop', 999) < MAX_HDOP and msg.get('NSats', 0) >= MIN_SATS
-    ]
-    
-    if not filtered_gps:
+    if stats is None:
         return html.Div([
             html.P("No valid GPS data available")
         ], style={'padding': '20px', 'color': '#666'})
     
-    # Extract data
-    lats = [msg.get('Lat', 0) for msg in filtered_gps]
-    lons = [msg.get('Lng', 0) for msg in filtered_gps]
-    hdops = [msg.get('HDop', 0) for msg in filtered_gps]
-    nsats = [msg.get('NSats', 0) for msg in filtered_gps]
-    
-    # Compute bounds
-    lat_min, lat_max = min(lats), max(lats)
-    lon_min, lon_max = min(lons), max(lons)
-    avg_hdop = np.mean(hdops)
-    avg_sats = np.mean(nsats)
-    
-    # Format locations
-    takeoff_loc = f"{lats[0]:.4f}° N, {lons[0]:.4f}° E"
-    landing_loc = f"{lats[-1]:.4f}° N, {lons[-1]:.4f}° E"
-    bounds_box = f"NE: {lat_max:.4f}°, {lon_max:.4f}° | SW: {lat_min:.4f}°, {lon_min:.4f}°"
-    
-    num_valid = len(filtered_gps)
-    num_total = len(gps_data)
+    takeoff_loc = stats.takeoff_loc
+    landing_loc = stats.landing_loc
+    bounds_box = stats.bounds_box
+    num_valid = stats.num_valid
+    num_total = stats.num_total
+    avg_hdop = stats.avg_hdop
+    avg_sats = stats.avg_sats
     
     stats_table = html.Table([
         html.Tr([html.Th("Field", style={'textAlign': 'left', 'padding': '8px', 'borderBottom': '1px solid #444'}),

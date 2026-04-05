@@ -29,7 +29,8 @@ def render_summary(metrics: Dict) -> None:
             'value': f"{metrics.get('distance_m', 0):.0f}",
             'unit': 'm',
             'icon': '📍',
-            'color': '#34d399'
+            'color': '#34d399',
+            'warning': metrics.get('distance_warning'),
         },
         {
             'label': 'Max H. Speed',
@@ -50,7 +51,8 @@ def render_summary(metrics: Dict) -> None:
             'value': f"{metrics.get('alt_gain_m', 0):.0f}",
             'unit': 'meters',
             'icon': '🏔️',
-            'color': '#a78bfa'
+            'color': '#a78bfa',
+            'warning': metrics.get('alt_gain_warning'),
         },
         {
             'label': 'Max Acceleration',
@@ -75,14 +77,28 @@ def render_summary(metrics: Dict) -> None:
         },
     ]
 
+    def _render_stat_card(card_data: Dict) -> None:
+        card_kwargs = {k: v for k, v in card_data.items() if k != 'warning'}
+        st.markdown(stat_card(**card_kwargs), unsafe_allow_html=True)
+
     # Row 1: First 4 cards
     cols1 = st.columns(4, gap="small")
     for i, card_data in enumerate(cards[:4]):
         with cols1[i]:
-            st.markdown(stat_card(**card_data), unsafe_allow_html=True)
+            _render_stat_card(card_data)
 
     # Row 2: Last 4 cards
     cols2 = st.columns(4, gap="small")
     for i, card_data in enumerate(cards[4:]):
         with cols2[i]:
-            st.markdown(stat_card(**card_data), unsafe_allow_html=True)
+            _render_stat_card(card_data)
+
+    notice_items = [(c['label'], c['warning']) for c in cards if c.get('warning')]
+    if notice_items:
+        with st.expander(
+            f"⚠️ Metric notices ({len(notice_items)})",
+            expanded=False,
+        ):
+            for label, msg in notice_items:
+                st.markdown(f"**{label}**")
+                st.warning(msg)
