@@ -1,0 +1,17 @@
+/* Brand theme: primary #E0FE6B — Material custom palette (see mkdocs.yml primary: custom) */
+:root,
+[data-md-color-scheme="default"],
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: #e0fe6b;
+  --md-primary-fg-color--light: #f2ff9d;
+  --md-primary-fg-color--dark: #c5e050;
+  /* Text / icons on primary-colored surfaces (header, nav) */
+  --md-primary-bg-color: rgba(0, 0, 0, 0.87);
+  --md-primary-bg-color--light: rgba(0, 0, 0, 0.54);
+  --md-primary-bg-color--lighter: rgba(0, 0, 0, 0.26);
+
+  /* Accent: dark green for links & focus (readable on light content area) */
+  --md-accent-fg-color: #33691e;
+  --md-accent-fg-color--transparent: #33691e1a;
+  --md-accent-bg-color: #fff;
+}
