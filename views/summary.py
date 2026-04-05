@@ -82,6 +82,8 @@ def render_summary(metrics: Dict) -> None:
             'icon': '🔋',
             'color': '#fb923c',
             'warning': metrics.get('battery_warning'),
+            'color': '#fb923c',
+            'warning': metrics.get('battery_warning'),
         },
         {
             'label': 'Avg GPS Satellites',
@@ -108,6 +110,8 @@ def render_summary(metrics: Dict) -> None:
     
 
     notice_items = [(c['label'], c['warning']) for c in cards if c.get('warning')]
+    if metrics.get('gyro_extremes_warning'):
+        notice_items.append(('Gyroscope Extremes', metrics['gyro_extremes_warning']))
     if metrics.get('gyro_extremes_warning'):
         notice_items.append(('Gyroscope Extremes', metrics['gyro_extremes_warning']))
     if notice_items:
