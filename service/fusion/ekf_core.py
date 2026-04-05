@@ -5,9 +5,8 @@ from __future__ import annotations
 import math
 import numpy as np
 
-from processing.orientation import euler_to_rotation_matrix, rotate_vector
-
-GRAVITY_MS2 = 9.80665
+from service.fusion.orientation import euler_to_rotation_matrix, rotate_vector
+from service.common.constants import GRAVITY_MS2
 
 
 def f_state_transition(X: np.ndarray, acc_body: np.ndarray, gyro: np.ndarray, dt: float) -> np.ndarray:

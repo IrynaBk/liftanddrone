@@ -86,19 +86,19 @@ def render_summary(metrics: Dict) -> None:
     ]
 
     def _render_stat_card(card_data: Dict) -> None:
-        st.markdown(stat_card(**card_data), unsafe_allow_html=True)
+        card_kwargs = {k: v for k, v in card_data.items() if k != 'warning'}
+        st.markdown(stat_card(**card_kwargs), unsafe_allow_html=True)
 
-    # Row 1: First 5 cards
-    cols1 = st.columns(5, gap="small")
-    for i, card_data in enumerate(cards[:5]):
-        with cols1[i]:
-            _render_stat_card(card_data)
+    # Dynamic grid: render as many rows as needed for current card count.
+    cards_per_row = 4
+    for start_idx in range(0, len(cards), cards_per_row):
+        row_cards = cards[start_idx:start_idx + cards_per_row]
+        cols = st.columns(cards_per_row, gap="small")
+        for i, card_data in enumerate(row_cards):
+            with cols[i]:
+                _render_stat_card(card_data)
 
-    # Row 2: Remaining cards
-    cols2 = st.columns(5, gap="small")
-    for i, card_data in enumerate(cards[5:]):
-        with cols2[i]:
-            _render_stat_card(card_data)
+    
 
     notice_items = [(c['label'], c['warning']) for c in cards if c.get('warning')]
     if metrics.get('gyro_extremes_warning'):

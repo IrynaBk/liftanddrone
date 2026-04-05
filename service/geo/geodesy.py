@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 from typing import Tuple
 
-EARTH_RADIUS_M = 6_371_000.0
+from service.common.constants import EARTH_RADIUS_M
 
 
 def haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
@@ -39,6 +39,22 @@ def llh_to_ned(
     down = ref_alt - alt
 
     return north, east, down
+
+
+def wgs84_to_enu(
+    lat: float,
+    lon: float,
+    alt: float,
+    lat0: float,
+    lon0: float,
+    alt0: float,
+) -> Tuple[float, float, float]:
+    """Convert WGS84 geodetic point to local ENU frame in meters."""
+    lat0_rad = math.radians(lat0)
+    east = (lon - lon0) * math.cos(lat0_rad) * EARTH_RADIUS_M * math.pi / 180.0
+    north = (lat - lat0) * EARTH_RADIUS_M * math.pi / 180.0
+    up = alt - alt0
+    return east, north, up
 
 
 def normalize_gps_measurement(

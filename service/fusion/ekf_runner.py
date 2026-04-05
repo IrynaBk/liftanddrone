@@ -7,7 +7,7 @@ from typing import Dict, List, Optional
 
 import numpy as np
 
-from processing.ekf_core import (
+from service.fusion.ekf_core import (
     calculate_kalman_gain,
     f_state_transition,
     get_jacobian_F,
@@ -15,18 +15,21 @@ from processing.ekf_core import (
     update_covariance,
     update_state,
 )
-from processing.geodesy import normalize_gps_measurement
-from processing.integration import calculate_magnitude
+from service.geo.geodesy import normalize_gps_measurement
+from service.common.constants import (
+    GRAVITY_MS2,
+    EKF_INIT_IMU_SAMPLES as INIT_IMU_SAMPLES,
+    EKF_INIT_LEVEL_G_TOL as INIT_LEVEL_G_TOL,
+    EKF_INIT_LEVEL_TIMEOUT_S as INIT_LEVEL_TIMEOUT_S,
+    EKF_ADAPTIVE_MIN_SAMPLES as ADAPTIVE_MIN_SAMPLES,
+    EKF_ADAPTIVE_WINDOW as ADAPTIVE_WINDOW,
+    EKF_ADAPTIVE_DELTA_MS2 as ADAPTIVE_DELTA_MS2,
+    EKF_ADAPTIVE_IN_FLIGHT_MAG_MS2 as ADAPTIVE_IN_FLIGHT_MAG_MS2,
+)
 
 
-GRAVITY_MS2 = 9.80665
-INIT_IMU_SAMPLES = 50
-INIT_LEVEL_G_TOL = 1.5
-INIT_LEVEL_TIMEOUT_S = 2.0
-ADAPTIVE_MIN_SAMPLES = 10
-ADAPTIVE_WINDOW = 5
-ADAPTIVE_DELTA_MS2 = 0.5
-ADAPTIVE_IN_FLIGHT_MAG_MS2 = 10.3
+def _magnitude(vx: float, vy: float, vz: float) -> float:
+    return math.sqrt(vx * vx + vy * vy + vz * vz)
 
 
 def _safe_time(msg: dict) -> float:
@@ -253,7 +256,7 @@ def run_ekf_on_log(data: Dict[str, List[dict]]) -> Optional[Dict[str, List[float
             north.append(x[0])
             east.append(x[1])
             up.append(-x[2])  # Convert Down to Up metric
-            speed.append(calculate_magnitude(vn, ve, vd))
+            speed.append(_magnitude(vn, ve, vd))
             h_speed.append(math.sqrt(vn**2 + ve**2))
             v_speed.append(abs(vd))
             
