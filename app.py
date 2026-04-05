@@ -23,6 +23,7 @@ from ui.views.summary import render_summary
 from ui.views.map import render_map
 from ui.views.telemetry import render_panel_toolbar
 from ui.views.ai_analysis import render_ai_analysis
+from ui.views.export import render_export_panel
 
 st.set_page_config(
     page_title="Lift & Drone",
@@ -42,6 +43,8 @@ def main():
 
     if ctx:
         render_summary(ctx.metrics)
+        st.divider()
+        render_export_panel(ctx.data, ctx.metrics)
         st.divider()
         render_map(ctx.data, ctx.color_by)
         st.divider()

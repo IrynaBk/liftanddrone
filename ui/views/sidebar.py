@@ -9,6 +9,7 @@ from typing import Optional
 import streamlit as st
 
 from core.parsing.log_parser import get_firmware_version
+from core.export.csv_exporter import export_metrics_to_csv, export_all_telemetry_to_csv, generate_csv_filename
 from infrastructure.log_loader import load_data_from_bytes
 from ui.components import drone_spinner, format_metric_value
 from ui.styles import inject_file_uploader_hide_add_button
@@ -105,14 +106,42 @@ def render_sidebar() -> Optional[SidebarContext]:
             st.markdown("---")
             st.markdown("### Quick Stats")
             metrics = active["metrics"]
+            ekf_available = metrics.get("ekf_available", False)
+            max_speed = (
+                metrics.get("ekf_max_speed_ms", 0) if ekf_available
+                else metrics.get("max_total_speed_ms", 0)
+            )
+            speed_label = "Max Speed (EKF)" if ekf_available else "Max Speed (GPS)"
             col1, col2 = st.columns(2)
             with col1:
                 st.metric("Duration", metrics["duration_str"])
                 st.metric("Distance", f"{metrics['distance_m']:.0f} m")
             with col2:
-                st.metric("Max Speed", f"{metrics['max_total_speed_ms']:.1f} m/s")
+                st.metric(speed_label, f"{max_speed:.1f} m/s")
                 energy_val = format_metric_value(metrics.get("energy_used_mah"), default=0, format_str="{:.0f}")
                 st.metric("Energy", f"{energy_val} mAh" if energy_val != "N/A" else "N/A")
+
+            st.markdown("---")
+            st.markdown("### Quick Export")
+            export_col1, export_col2 = st.columns(2)
+            with export_col1:
+                st.download_button(
+                    label="📊 Metrics CSV",
+                    data=export_metrics_to_csv(metrics).getvalue(),
+                    file_name=generate_csv_filename(prefix="metrics"),
+                    mime="text/csv",
+                    use_container_width=True,
+                    help="Download computed flight metrics",
+                )
+            with export_col2:
+                st.download_button(
+                    label="📤 All Data CSV",
+                    data=export_all_telemetry_to_csv(active["data"]).getvalue(),
+                    file_name=generate_csv_filename(prefix="telemetry_all"),
+                    mime="text/csv",
+                    use_container_width=True,
+                    help="Download all sensor telemetry data",
+                )
 
             ctx = SidebarContext(
                 data=active["data"],

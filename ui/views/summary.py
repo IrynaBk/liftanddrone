@@ -10,6 +10,18 @@ def render_summary(metrics: Dict) -> None:
     """Render mission summary as stat cards in a 4x2 grid."""
     st.markdown("### Mission Summary")
 
+    ekf_available = metrics.get('ekf_available', False)
+    speed_source = 'EKF-fused' if ekf_available else 'GPS'
+
+    if ekf_available:
+        max_total_speed = metrics.get('ekf_max_speed_ms', 0)
+        max_h_speed = metrics.get('ekf_max_h_speed_ms', 0)
+        max_v_speed = metrics.get('ekf_max_v_speed_ms', 0)
+    else:
+        max_total_speed = metrics.get('max_total_speed_ms', 0)
+        max_h_speed = metrics.get('max_h_speed_ms', 0)
+        max_v_speed = metrics.get('max_v_speed_ms', 0)
+
     cards = [
         {
             'label': 'Flight Duration',
@@ -28,22 +40,22 @@ def render_summary(metrics: Dict) -> None:
         },
         {
             'label': 'Max Total Speed',
-            'value': f"{metrics.get('max_total_speed_ms', 0):.1f}",
-            'unit': 'm/s',
+            'value': f"{max_total_speed:.1f}",
+            'unit': f'm/s · {speed_source}',
             'icon': '🚀',
             'color': '#e879f9'
         },
         {
             'label': 'Max H. Speed',
-            'value': f"{metrics.get('max_h_speed_ms', 0):.1f}",
-            'unit': 'm/s',
+            'value': f"{max_h_speed:.1f}",
+            'unit': f'm/s · {speed_source}',
             'icon': '⚡',
             'color': '#f59e0b'
         },
         {
             'label': 'Max V. Speed',
-            'value': f"{metrics.get('max_v_speed_ms', 0):.1f}",
-            'unit': 'm/s',
+            'value': f"{max_v_speed:.1f}",
+            'unit': f'm/s · {speed_source}',
             'icon': '↕️',
             'color': '#f59e0b'
         },

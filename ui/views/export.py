@@ -3,7 +3,7 @@
 import streamlit as st
 from typing import Dict
 
-from service.export.csv_exporter import (
+from core.export.csv_exporter import (
     export_metrics_to_csv,
     export_message_data_to_csv,
     export_all_telemetry_to_csv,
