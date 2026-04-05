@@ -8,8 +8,9 @@ from typing import Dict, Optional
 import streamlit as st
 
 from service.ai.flight_analysis import analyse_flight
+from ui.components import drone_spinner
 
-_SESSION_KEY = "ai_analysis_result"
+_CACHE_KEY = "ai_analysis_cache"  # dict: file_key -> result str
 
 _MODES = {
     "Short Report":    "short",
@@ -18,9 +19,19 @@ _MODES = {
 }
 
 
-def render_ai_analysis(metrics: Dict) -> None:
-    """Render the AI flight analysis section."""
+def render_ai_analysis(metrics: Dict, file_key: str = "") -> None:
+    """Render the AI flight analysis section.
+
+    Args:
+        metrics:  flight metrics dict from compute_metrics().
+        file_key: stable id for the current log file (sig_key + active_idx).
+                  Used to cache and restore analysis results per file.
+    """
     st.markdown("### AI Flight Analysis")
+
+    # Ensure cache dict exists
+    if _CACHE_KEY not in st.session_state:
+        st.session_state[_CACHE_KEY] = {}
 
     api_key: Optional[str] = os.environ.get("GEMINI_API_KEY") or ""
 
@@ -59,12 +70,17 @@ def render_ai_analysis(metrics: Dict) -> None:
 
     button_disabled = mode == "custom" and not custom_question.strip()
     if st.button("Analyse flight with Gemini", type="primary", use_container_width=True, disabled=button_disabled):
-        with st.spinner("Gemini is analysing your flight…"):
+        with drone_spinner("Gemini is analysing your flight…"):
             try:
                 result = analyse_flight(api_key, metrics, mode=mode, custom_question=custom_question)
-                st.session_state[_SESSION_KEY] = result
             except Exception as exc:
-                st.session_state[_SESSION_KEY] = f"**API Error:** {exc}"
+                result = f"**API Error:** {exc}"
+        # Cache per file_key (mode+question included so switching mode reruns)
+        cache_entry_key = f"{file_key}:{mode}:{custom_question}"
+        st.session_state[_CACHE_KEY][cache_entry_key] = result
 
-    if _SESSION_KEY in st.session_state:
-        st.markdown(st.session_state[_SESSION_KEY])
+    # Show cached result for current file+mode if available
+    cache_entry_key = f"{file_key}:{mode}:{custom_question if mode == 'custom' else ''}"
+    cached = st.session_state[_CACHE_KEY].get(cache_entry_key)
+    if cached:
+        st.markdown(cached)
