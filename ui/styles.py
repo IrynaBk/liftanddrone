@@ -19,7 +19,18 @@ def inject_global_css():
         background-color: #0a0d16;
         border-right: 1px solid #1e2535;
     }
-
+    .sidebar-header {
+        margin-top: -30px;
+    }
+    .sidebar-header h2 {
+        margin-bottom: 4px;
+    }
+    .sidebar-subtext {
+        margin: 0;
+        color: #9ca3af;
+        font-size: 13px;
+    }
+                
     /* Reduce default padding */
     .block-container {
         padding-top: 1.5rem;

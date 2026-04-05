@@ -4,11 +4,21 @@ Modern, dark-themed UI with stat cards, interactive 2D map, and switchable panel
 """
 
 import hashlib
+import logging
 
 import streamlit as st
+from dotenv import load_dotenv
+load_dotenv()
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%H:%M:%S",
+)
 
 # UI imports
 from ui.styles import inject_global_css, inject_file_uploader_hide_add_button
+from ui.components import drone_spinner
 
 # Data imports
 from data.loader import load_data_from_bytes, extract_firmware_version
@@ -17,6 +27,7 @@ from data.loader import load_data_from_bytes, extract_firmware_version
 from views.summary import render_summary
 from views.map import render_map
 from views.telemetry import render_panel_toolbar
+from views.ai_analysis import render_ai_analysis
 
 
 # ============================================================================
@@ -75,14 +86,24 @@ def main():
     """Main Streamlit app."""
     inject_global_css()
 
+    if "app_loaded" not in st.session_state:
+        with drone_spinner("Loading Lift & Drone…"):
+            import time; time.sleep(1.5)
+        st.session_state["app_loaded"] = True
+
     data = None
     metrics = None
     color_by = None
     firmware = None
+    file_key = None
 
     with st.sidebar:
-        st.markdown("## 🚁 Lift & Drone")
-        st.markdown("ArduPilot Dataflash Log Analysis")
+        st.markdown("""
+            <div class="sidebar-header">
+                <h2>🚁 Lift & Drone</h2>
+                <p class="sidebar-subtext">ArduPilot Dataflash Log Analysis</p>
+            </div>
+            """, unsafe_allow_html=True)
         st.markdown("---")
 
         uploaded_files = st.file_uploader(
@@ -113,11 +134,13 @@ def main():
             else:
                 active_idx = 0
 
-            logs = _load_logs_from_uploads(uploaded_files)
+            with drone_spinner("Parsing flight log…"):
+                logs = _load_logs_from_uploads(uploaded_files)
             active = logs[active_idx]
             data = active["data"]
             metrics = active["metrics"]
             firmware = active["firmware"]
+            file_key = f"{sig_key}_{active_idx}"
             if firmware:
                 st.markdown(f"**Firmware:** `{firmware}`")
 
@@ -143,7 +166,7 @@ def main():
                 st.metric("Duration", metrics["duration_str"])
                 st.metric("Distance", f"{metrics['distance_m']:.0f} m")
             with col2:
-                st.metric("Max Speed", f"{metrics['max_h_speed_ms']:.1f} m/s")
+                st.metric("Max Speed", f"{metrics['max_total_speed_ms']:.1f} m/s")
                 energy_val = display_value(metrics.get("energy_used_mah"), default=0, format_str="{:.0f}")
                 st.metric("Energy", f"{energy_val} mAh" if energy_val != "N/A" else "N/A")
 
@@ -163,6 +186,8 @@ def main():
         render_summary(metrics)
         st.divider()
         render_map(data, color_by)
+        st.divider()
+        render_ai_analysis(metrics, file_key=f"{sig_key}_{active_idx}")
         st.divider()
         render_panel_toolbar(data, color_by)
     else:

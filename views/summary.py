@@ -27,10 +27,17 @@ def render_summary(metrics: Dict) -> None:
         {
             'label': 'Total Distance',
             'value': f"{metrics.get('distance_m', 0):.0f}",
-            'unit': 'm',
+            'unit': 'meters',
             'icon': '📍',
             'color': '#34d399',
             'warning': metrics.get('distance_warning'),
+        },
+        {
+            'label': 'Max Total Speed',
+            'value': f"{metrics.get('max_total_speed_ms', 0):.1f}",
+            'unit': 'm/s',
+            'icon': '🚀',
+            'color': '#e879f9'
         },
         {
             'label': 'Max H. Speed',
@@ -47,12 +54,19 @@ def render_summary(metrics: Dict) -> None:
             'color': '#f59e0b'
         },
         {
-            'label': 'Max Altitude Gain',
-            'value': f"{metrics.get('alt_gain_m', 0):.0f}",
+            'label': 'Max Altitule (ASL)',
+            'value': f"{metrics.get('max_alt_m', 0):.0f}",
             'unit': 'meters above sea level',
-            'icon': '🏔️',
+            'icon': '🌍',
             'color': '#a78bfa',
             'warning': metrics.get('alt_gain_warning'),
+        },
+        {
+            'label': 'Max Altitule',
+            'value': f"{metrics.get('max_alt_above_takeoff_m', 0):.0f}",
+            'unit': 'meters above takeoff',
+            'icon': '🏔️',
+            'color': '#a78bfa',
         },
         {
             'label': 'Max Acceleration',
@@ -66,6 +80,8 @@ def render_summary(metrics: Dict) -> None:
             'value': metric_value(metrics.get('energy_used_mah'), default=0, format_str="{:.0f}"),
             'unit': 'mAh',
             'icon': '🔋',
+            'color': '#fb923c',
+            'warning': metrics.get('battery_warning'),
             'color': '#fb923c',
             'warning': metrics.get('battery_warning'),
         },
@@ -82,19 +98,20 @@ def render_summary(metrics: Dict) -> None:
         card_kwargs = {k: v for k, v in card_data.items() if k != 'warning'}
         st.markdown(stat_card(**card_kwargs), unsafe_allow_html=True)
 
-    # Row 1: First 4 cards
-    cols1 = st.columns(4, gap="small")
-    for i, card_data in enumerate(cards[:4]):
-        with cols1[i]:
-            _render_stat_card(card_data)
-
-    # Row 2: Last 4 cards
-    cols2 = st.columns(4, gap="small")
-    for i, card_data in enumerate(cards[4:]):
-        with cols2[i]:
-            _render_stat_card(card_data)
+    # Dynamic grid: render as many rows as needed for current card count.
+    cards_per_row = 4
+    for start_idx in range(0, len(cards), cards_per_row):
+        row_cards = cards[start_idx:start_idx + cards_per_row]
+        cols = st.columns(cards_per_row, gap="small")
+        for i, card_data in enumerate(row_cards):
+            with cols[i]:
+                _render_stat_card(card_data)
+        st.markdown('<div style="margin-bottom: 1.5rem;"></div>', unsafe_allow_html=True)
+    
 
     notice_items = [(c['label'], c['warning']) for c in cards if c.get('warning')]
+    if metrics.get('gyro_extremes_warning'):
+        notice_items.append(('Gyroscope Extremes', metrics['gyro_extremes_warning']))
     if metrics.get('gyro_extremes_warning'):
         notice_items.append(('Gyroscope Extremes', metrics['gyro_extremes_warning']))
     if notice_items:

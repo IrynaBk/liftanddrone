@@ -7,7 +7,7 @@ from typing import Dict, List, Optional
 
 import numpy as np
 
-from services.gps_quality import filter_gps_by_quality
+from service.geo.gps_quality import filter_gps_by_quality
 
 
 @dataclass(frozen=True)
@@ -27,10 +27,10 @@ def compute_mission_bounds_stats(gps_data: List[Dict]) -> Optional[MissionBounds
     if not filtered_gps:
         return None
 
-    lats = [msg.get('Lat', 0) for msg in filtered_gps]
-    lons = [msg.get('Lng', 0) for msg in filtered_gps]
-    hdops = [msg.get('HDop', 0) for msg in filtered_gps]
-    nsats = [msg.get('NSats', 0) for msg in filtered_gps]
+    lats = [msg.get("Lat", 0) for msg in filtered_gps]
+    lons = [msg.get("Lng", 0) for msg in filtered_gps]
+    hdops = [msg.get("HDop", 0) for msg in filtered_gps]
+    nsats = [msg.get("NSats", 0) for msg in filtered_gps]
 
     lat_min, lat_max = min(lats), max(lats)
     lon_min, lon_max = min(lons), max(lons)
