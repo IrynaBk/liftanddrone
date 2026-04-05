@@ -6,6 +6,7 @@ from services.acceleration_service import compute_max_acceleration_ms2
 from services.battery_metrics_service import compute_battery_metrics
 from services.flight_duration_service import compute_flight_duration
 from services.gps_track_metrics_service import compute_gps_track_metrics
+from services.gyro_extremes_service import compute_gyro_extremes_warning
 from services.horizontal_speed_service import compute_max_horizontal_speed_ms
 from services.vertical_speed_service import compute_max_vertical_speed_ms
 
@@ -15,7 +16,9 @@ def compute_metrics(data: Dict[str, List[Dict]]) -> Dict:
     Compute all mission metrics from parsed log data.
 
     Returns:
-        Dictionary with duration, distance, speeds, altitude gain, acceleration, battery.
+        Dictionary with duration, distance, speeds, altitude gain, acceleration, battery,
+        avg_sats (mean GPS NSats), optional battery_warning when no BAT messages exist,
+        and optional gyro_extremes_warning when IMU |Gyr| exceeds GYRO_EXTREME_WARN_DEG_S.
     """
     gps_data = data.get('GPS', [])
     imu_data = data.get('IMU', [])
@@ -27,9 +30,12 @@ def compute_metrics(data: Dict[str, List[Dict]]) -> Dict:
         duration_s, duration_str = compute_flight_duration(gps_data)
         metrics['duration_s'] = duration_s
         metrics['duration_str'] = duration_str
+        nsats = [msg.get('NSats', 0) for msg in gps_data]
+        metrics['avg_sats'] = sum(nsats) / len(nsats) if nsats else 0.0
     else:
         metrics['duration_s'] = 0
         metrics['duration_str'] = "N/A"
+        metrics['avg_sats'] = 0.0
 
     track = compute_gps_track_metrics(gps_data)
     metrics['distance_m'] = track['distance_m']
@@ -46,5 +52,11 @@ def compute_metrics(data: Dict[str, List[Dict]]) -> Dict:
     avg_current_a, energy_used_mah = compute_battery_metrics(bat_data)
     metrics['avg_current_a'] = avg_current_a
     metrics['energy_used_mah'] = energy_used_mah
+    metrics['battery_warning'] = (
+        "No battery telemetry (BAT) in this log; energy and current are unavailable."
+        if not bat_data
+        else None
+    )
+    metrics['gyro_extremes_warning'] = compute_gyro_extremes_warning(imu_data)
 
     return metrics

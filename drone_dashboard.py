@@ -568,21 +568,21 @@ def build_events_panel(data: Dict) -> go.Figure:
 def build_3d_trajectory(data: Dict, color_by: str = 'speed') -> go.Figure:
     """
     Create an interactive 3D trajectory viewer with optional coloring.
-    
+
     Args:
         data: Raw parsed log data
         color_by: 'speed' or 'time' — how to color the trajectory
-        
+
     Returns:
         Plotly Figure object
     """
     gps_data = data.get('GPS', [])
-    
+
     if not gps_data:
         fig = go.Figure()
         fig.add_annotation(text="No GPS data available for 3D trajectory")
         return fig
-    
+
     # Use first valid GPS fix as origin
     lat0, lon0, alt0 = None, None, None
     for msg in gps_data:
@@ -592,35 +592,39 @@ def build_3d_trajectory(data: Dict, color_by: str = 'speed') -> go.Figure:
         if lat != 0 and lon != 0:
             lat0, lon0, alt0 = lat, lon, alt
             break
-    
+
     if lat0 is None:
         fig = go.Figure()
         fig.add_annotation(text="No valid GPS coordinates for 3D trajectory")
         return fig
-    
-    # Convert all GPS points to ENU
+
     east_list = []
     north_list = []
     up_list = []
     speeds = []
     times = []
-    
+
     for msg in gps_data:
         lat = msg.get('Lat', 0)
         lon = msg.get('Lng', 0)
         alt = msg.get('Alt', 0)
         spd = msg.get('Spd', 0)
-        
+
         if lat == 0 or lon == 0:
             continue
-        
+
         e, n, u = wgs84_to_enu(lat, lon, alt, lat0, lon0, alt0)
         east_list.append(e)
         north_list.append(n)
         up_list.append(u)
         speeds.append(spd)
         times.append(msg['TimeS'])
-    
+
+    if not east_list:
+        fig = go.Figure()
+        fig.add_annotation(text="No valid GPS coordinates for 3D trajectory")
+        return fig
+
     # Determine color scale
     if color_by == 'speed' and speeds:
         color_scale_vals = speeds
@@ -630,14 +634,14 @@ def build_3d_trajectory(data: Dict, color_by: str = 'speed') -> go.Figure:
         color_scale_vals = times
         colorbar_title = "Time (s)"
         colorscale = 'Plasma'
-    
+
     # Normalize color values to [0, 1]
     color_min = min(color_scale_vals)
     color_max = max(color_scale_vals)
     color_norm = [(v - color_min) / (color_max - color_min + 1e-6) for v in color_scale_vals]
-    
+
     fig = go.Figure()
-    
+
     # Main trajectory line
     fig.add_trace(go.Scatter3d(
         x=east_list, y=north_list, z=up_list,
@@ -651,7 +655,7 @@ def build_3d_trajectory(data: Dict, color_by: str = 'speed') -> go.Figure:
         hovertemplate='<b>Position</b><br>E: %{x:.1f}m<br>N: %{y:.1f}m<br>Alt: %{z:.1f}m<extra></extra>',
         name='Trajectory'
     ))
-    
+
     # Scatter points for trajectory (with colorbar)
     fig.add_trace(go.Scatter3d(
         x=east_list, y=north_list, z=up_list,
@@ -667,7 +671,7 @@ def build_3d_trajectory(data: Dict, color_by: str = 'speed') -> go.Figure:
         hovertemplate='<b>Position</b><br>E: %{x:.1f}m<br>N: %{y:.1f}m<br>Alt: %{z:.1f}m<extra></extra>',
         name='Position'
     ))
-    
+
     # Start marker (green triangle)
     if east_list and north_list and up_list:
         fig.add_trace(go.Scatter3d(
@@ -677,7 +681,7 @@ def build_3d_trajectory(data: Dict, color_by: str = 'speed') -> go.Figure:
             name='Takeoff',
             hovertemplate='<b>Takeoff</b><br>E: %{x:.1f}m<br>N: %{y:.1f}m<br>Alt: %{z:.1f}m<extra></extra>'
         ))
-        
+
         # End marker (red triangle)
         fig.add_trace(go.Scatter3d(
             x=[east_list[-1]], y=[north_list[-1]], z=[up_list[-1]],
@@ -686,7 +690,7 @@ def build_3d_trajectory(data: Dict, color_by: str = 'speed') -> go.Figure:
             name='Landing',
             hovertemplate='<b>Landing</b><br>E: %{x:.1f}m<br>N: %{y:.1f}m<br>Alt: %{z:.1f}m<extra></extra>'
         ))
-    
+
     fig.update_layout(
         title=f"3D Trajectory (colored by {color_by.title()})",
         template="plotly_dark",
@@ -702,7 +706,7 @@ def build_3d_trajectory(data: Dict, color_by: str = 'speed') -> go.Figure:
         margin=dict(l=10, r=10, t=40, b=10),
         showlegend=True
     )
-    
+
     return fig
 
 
