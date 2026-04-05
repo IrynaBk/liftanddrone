@@ -736,7 +736,7 @@
 <td>Builds the metrics text block, picks system prompts, calls the Gemini API</td>
 </tr>
 <tr>
-<td><code>google-generativeai</code></td>
+<td><code>google-genai</code> (<code>import google.genai</code>)</td>
 <td>Python client (see <code>requirements.txt</code>)</td>
 </tr>
 </tbody>
@@ -744,7 +744,7 @@
 <p>The legacy <strong>Dash</strong> app (<code>drone_dashboard.py</code>) does <strong>not</strong> include this feature.</p>
 <hr />
 <h2 id="api-key">API key<a class="headerlink" href="#api-key" title="Permanent link">&para;</a></h2>
-<p>Set <strong><code>GEMINI_API_KEY</code></strong> in <strong><code>.streamlit/secrets.toml</code></strong> at the project root (Streamlit loads it; root-level keys are available to the app). If unset, the UI shows an expander where you can paste a key for the current session (password field). Keys are obtained from <a href="https://aistudio.google.com/app/apikey">Google AI Studio</a>.</p>
+<p>Set <strong><code>GEMINI_API_KEY</code></strong> in <strong><code>.streamlit/secrets.toml</code></strong> at the project root. The app also reads <strong><code>GEMINI_API_KEY</code></strong> from the process environment (<code>app.py</code> calls <code>load_dotenv()</code>, so a project-root <strong><code>.env</code></strong> may be used if you prefer). If unset, the UI shows an expander where you can paste a key for the current session (password field). Keys are obtained from <a href="https://aistudio.google.com/app/apikey">Google AI Studio</a>.</p>
 <p>Setup is described in <a href="../run-service/#4-enable-ai-flight-analysis-gemini">Run the service — step 4</a>.</p>
 <hr />
 <h2 id="model">Model<a class="headerlink" href="#model" title="Permanent link">&para;</a></h2>

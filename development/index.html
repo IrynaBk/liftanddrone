@@ -661,7 +661,7 @@
 <h2 id="legacy-dash-dashboard">Legacy Dash dashboard<a class="headerlink" href="#legacy-dash-dashboard" title="Permanent link">&para;</a></h2>
 <p><code>drone_dashboard.py</code> is a self-contained Dash application: constants, <code>parse_log()</code>, <code>compute_metrics()</code>, panel builders, and CLI (<code>main</code>). It remains useful for the classic all-panels-at-once layout and HTML export.</p>
 <h2 id="dependencies">Dependencies<a class="headerlink" href="#dependencies" title="Permanent link">&para;</a></h2>
-<p>Runtime libraries are listed in <code>requirements.txt</code> (pymavlink, numpy, plotly, dash, streamlit, geopy, optional Google AI, python-dotenv). Documentation tooling is isolated in <code>requirements-docs.txt</code> so production installs do not require MkDocs.</p>
+<p>Runtime libraries are listed in <code>requirements.txt</code> (pymavlink, numpy, plotly, dash, streamlit, geopy, <code>google-genai</code>, <code>python-dotenv</code>). Documentation tooling is isolated in <code>requirements-docs.txt</code> so production installs do not require MkDocs.</p>
 <h2 id="tests-and-quality">Tests and quality<a class="headerlink" href="#tests-and-quality" title="Permanent link">&para;</a></h2>
 <p>Add or run tests according to your workflow; this page only reflects the current structure. When extending message types or metrics, keep parsing and analytics changes consistent between Dash and Streamlit paths if both are still supported.</p>
 
