@@ -104,7 +104,7 @@ def render_summary(metrics: Dict) -> None:
         for i, card_data in enumerate(row_cards):
             with cols[i]:
                 _render_stat_card(card_data)
-
+        st.markdown('<div style="margin-bottom: 1.5rem;"></div>', unsafe_allow_html=True)
     
 
     notice_items = [(c['label'], c['warning']) for c in cards if c.get('warning')]
