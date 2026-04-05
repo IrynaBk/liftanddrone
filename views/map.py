@@ -3,8 +3,9 @@
 import streamlit as st
 import numpy as np
 from typing import Dict
-from drone_dashboard import build_2d_map_panel, MAX_HDOP, MIN_SATS
+from drone_dashboard import build_2d_map_panel
 from data.loader import reverse_geocode
+from service.orchestrator import get_filtered_gps
 
 
 def render_map(data: Dict, color_by: str) -> None:
@@ -20,10 +21,7 @@ def render_map(data: Dict, color_by: str) -> None:
     gps_data = data.get('GPS', [])
 
     if gps_data:
-        filtered_gps = [
-            msg for msg in gps_data
-            if msg.get('HDop', 999) < MAX_HDOP and msg.get('NSats', 0) >= MIN_SATS
-        ]
+        filtered_gps = get_filtered_gps(data)
 
         if filtered_gps:
             lats = [msg.get('Lat', 0) for msg in filtered_gps]

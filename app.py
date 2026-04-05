@@ -4,8 +4,15 @@ Modern, dark-themed UI with stat cards, interactive 2D map, and switchable panel
 """
 
 import hashlib
+import logging
 
 import streamlit as st
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%H:%M:%S",
+)
 
 # UI imports
 from ui.styles import inject_global_css, inject_file_uploader_hide_add_button
@@ -143,7 +150,7 @@ def main():
                 st.metric("Duration", metrics["duration_str"])
                 st.metric("Distance", f"{metrics['distance_m']:.0f} m")
             with col2:
-                st.metric("Max Speed", f"{metrics['max_h_speed_ms']:.1f} m/s")
+                st.metric("Max Speed", f"{metrics['max_total_speed_ms']:.1f} m/s")
                 energy_val = display_value(metrics.get("energy_used_mah"), default=0, format_str="{:.0f}")
                 st.metric("Energy", f"{energy_val} mAh" if energy_val != "N/A" else "N/A")
 

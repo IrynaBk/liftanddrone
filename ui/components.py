@@ -1,7 +1,14 @@
 """Reusable UI components for the dashboard."""
 
 
-def stat_card(label: str, value: str, unit: str, icon: str, color: str) -> str:
+def stat_card(
+    label: str,
+    value: str,
+    unit: str,
+    icon: str,
+    color: str,
+    warning: str | None = None,
+) -> str:
     """
     Create a stat card HTML component for big-number display.
 

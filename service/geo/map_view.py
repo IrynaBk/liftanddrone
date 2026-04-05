@@ -1,11 +1,11 @@
-"""Map layout: center and zoom to fit a lat/lon trajectory."""
+"""Map layout helpers for GPS trajectory."""
 
 from __future__ import annotations
 
 import math
 from typing import List, Tuple
 
-from services.constants import MAP_TRAJECTORY_PADDING_FRAC
+from service.common.constants import MAP_TRAJECTORY_PADDING_FRAC
 
 
 def compute_map_view_from_trajectory(
@@ -15,10 +15,7 @@ def compute_map_view_from_trajectory(
     height_px: float = 600.0,
     padding_frac: float = MAP_TRAJECTORY_PADDING_FRAC,
 ) -> Tuple[float, float, float]:
-    """
-    Center lat/lon and zoom level for Plotly map layout so the path fits
-    with ``padding_frac`` × span margin on each side (N/S and E/W).
-    """
+    """Return map center and zoom so the trajectory fits in view."""
     if len(lats) < 2 or len(lons) < 2:
         return (float(lats[0]), float(lons[0]), 16.0)
 

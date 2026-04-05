@@ -5,56 +5,38 @@ import tempfile
 import os
 from typing import Dict, Tuple, Optional
 from geopy.geocoders import Nominatim
-from drone_dashboard import parse_log, compute_metrics
+from service.orchestrator import process_log_file, get_firmware_version as _get_firmware_version
 
 
 @st.cache_data
 def load_data_from_bytes(file_bytes: bytes) -> Tuple[Dict, Dict]:
     """
-    Parse log from uploaded bytes and compute metrics.
+    Parse log from uploaded bytes and run full telemetry processing orchestrator.
     Cached to avoid re-parsing on re-renders.
 
     Args:
         file_bytes: Raw bytes from uploaded file
 
     Returns:
-        Tuple of (data dict, metrics dict)
+        Tuple of (data dict, metrics dict) returned by processing orchestrator.
     """
-    # Write bytes to temporary file (parse_log expects a filepath)
     with tempfile.NamedTemporaryFile(suffix=".bin", delete=False) as tmp:
         tmp.write(file_bytes)
         tmp_path = tmp.name
 
     try:
-        data = parse_log(tmp_path)
-        metrics = compute_metrics(data)
-        return data, metrics
+        return process_log_file(tmp_path)
     finally:
-        # Clean up temp file - handle Windows file locking
         try:
             if os.path.exists(tmp_path):
                 os.remove(tmp_path)
         except (PermissionError, OSError):
-            # File may still be locked on Windows; OS will clean it up eventually
             pass
 
 
 def extract_firmware_version(data: Dict) -> Optional[str]:
-    """
-    Extract firmware version from MSG records if available.
-
-    Args:
-        data: Parsed log data
-
-    Returns:
-        Firmware version string or None
-    """
-    msg_data = data.get('MSG', [])
-    for msg in msg_data:
-        message = msg.get('Message', '')
-        if 'ArduCopter' in message or 'ArduPlane' in message or 'Rover' in message:
-            return message
-    return None
+    """Extract firmware version from MSG records. Delegates to orchestrator."""
+    return _get_firmware_version(data)
 
 
 @st.cache_data

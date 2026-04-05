@@ -15,32 +15,30 @@ Dependencies:
 import sys
 import argparse
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Tuple, Optional
+import math
 
 import numpy as np
 import plotly.graph_objects as go
+import plotly.express as px
 from plotly.subplots import make_subplots
 import dash
-from dash import dcc, html, Input, Output
-from pymavlink import mavutil
+from dash import dcc, html, Input, Output, State
 
-from services.constants import (
-    EARTH_RADIUS_M,
+from service.common.constants import (
     LOW_VOLTAGE_THRESHOLD,
-    MAX_HDOP,
-    MIN_SATS,
     MOTOR_MAX_PWM,
     MOTOR_MIN_PWM,
     MOTOR_SATURATION_MARGIN,
-    MESSAGE_TYPES,
     VIBE_CRITICAL_THRESHOLD,
     VIBE_WARNING_THRESHOLD,
 )
-from services.geo import haversine, integrate_velocity, wgs84_to_enu
-from services.gps_quality import filter_gps_by_quality
-from services.map_view_service import compute_map_view_from_trajectory
-from services.metrics import compute_metrics
-from services.mission_bounds_service import compute_mission_bounds_stats
+from service.geo.geodesy import wgs84_to_enu
+from service.geo.gps_quality import filter_gps_by_quality
+from service.geo.map_view import compute_map_view_from_trajectory
+from service.geo.mission_bounds import compute_mission_bounds_stats
+from service.metrics.metrics import compute_metrics as compute_mission_metrics
+from service.common.parser import parse_log as parse_ardupilot_log
 
 # ============================================================================
 # LOG PARSING
@@ -48,71 +46,20 @@ from services.mission_bounds_service import compute_mission_bounds_stats
 
 
 def parse_log(filepath: str) -> Dict[str, List[Dict]]:
-    """
-    Parse an ArduPilot Dataflash binary log file using pymavlink DFReader.
-    
-    Args:
-        filepath: Path to .bin log file
-        
-    Returns:
-        Dictionary mapping message type names to lists of message dicts.
-        Each dict contains all fields from the message, plus 'TimeS' (time in seconds).
-    """
-    print(f"Parsing {filepath}...")
-    
-    data = {msg_type: [] for msg_type in MESSAGE_TYPES}
-    
-    try:
-        mlog = mavutil.mavlink_connection(filepath, dialect='ardupilotmega')
-    except Exception as e:
-        print(f"Error opening log file: {e}")
-        sys.exit(1)
-    
-    first_timestamp_us = None
-    msg_counts = {msg_type: 0 for msg_type in MESSAGE_TYPES}
-    
-    while True:
-        msg = mlog.recv_match()
-        if msg is None:
-            break
-        
-        msg_type = msg.get_type()
-        if msg_type not in MESSAGE_TYPES:
-            continue
-        
-        # Extract TimeUS from message
-        if not hasattr(msg, 'TimeUS'):
-            continue
-        
-        time_us = msg.TimeUS
-        
-        # Set first timestamp reference
-        if first_timestamp_us is None:
-            first_timestamp_us = time_us
-        
-        # Convert to relative seconds
-        time_s = (time_us - first_timestamp_us) / 1_000_000.0
-        
-        # Create message dict with all fields
-        msg_dict = msg.to_dict()
-        msg_dict['TimeS'] = time_s
-        
-        data[msg_type].append(msg_dict)
-        msg_counts[msg_type] += 1
-    
-    # Close the connection to release file handle
-    mlog.close()
-    
-    # Print summary
-    print("\nLog Summary:")
-    for msg_type in MESSAGE_TYPES:
-        if msg_counts[msg_type] > 0:
-            print(f"  ✓ {msg_type}: {msg_counts[msg_type]:,} records")
-    
-    return data
+    """Thin wrapper kept for backward compatibility with existing imports."""
+    return parse_ardupilot_log(filepath)
 
 
 # ============================================================================
+# METRICS COMPUTATION
+# ============================================================================
+
+
+def compute_metrics(data: Dict[str, List[Dict]]) -> Dict:
+    """Thin wrapper kept for backward compatibility with existing imports."""
+    return compute_mission_metrics(data)
+
+
 # DASHBOARD PANELS
 # ============================================================================
 
@@ -150,11 +97,14 @@ def build_summary_panel(metrics: Dict, data: Dict) -> go.Figure:
     # Create summary table
     summary_data = [
         ["Duration", metrics.get('duration_str', 'N/A')],
-        ["Distance", f"{metrics.get('distance_m', 0):.0f} m"],
-        ["Max H. Speed", f"{metrics.get('max_h_speed_ms', 0):.1f} m/s"],
-        ["Max V. Speed", f"{metrics.get('max_v_speed_ms', 0):.1f} m/s"],
+        ["Distance", f"{metrics.get('distance_km', 0):.2f} km"],
+        ["Max Total Speed", f"{metrics.get('max_total_speed_ms', 0):.1f} m/s ({metrics.get('max_total_speed_kmh', 0):.1f} km/h)"],
+        ["Max H. Speed", f"{metrics.get('max_h_speed_ms', 0):.1f} m/s ({metrics.get('max_h_speed_kmh', 0):.1f} km/h)"],
+        ["Max V. Speed", f"{metrics.get('max_v_speed_ms', 0):.1f} m/s ({metrics.get('max_v_speed_kmh', 0):.1f} km/h)"],
         ["Max Altitude Gain", f"{metrics.get('alt_gain_m', 0):.1f} m"],
-        ["Max Acceleration", f"{metrics.get('max_accel_ms2', 0):.2f} m/s²"],
+        ["Max Acceleration", f"{metrics.get('max_accel_ms2', 0):.2f} m/s² (gravity-compensated)"],
+        ["IMU-derived Speed", f"{metrics.get('max_imu_speed_ms', 0):.1f} m/s (trapezoidal integration)"],
+        ["Avg GPS Satellites", f"{metrics.get('avg_sats', 0):.0f}"],
         ["Avg Current", f"{metrics.get('avg_current_a', 0):.1f} A"],
         ["Total Energy", f"{metrics.get('energy_used_mah', 0):.0f} mAh"],
     ]
@@ -568,79 +518,98 @@ def build_events_panel(data: Dict) -> go.Figure:
 def build_3d_trajectory(data: Dict, color_by: str = 'speed') -> go.Figure:
     """
     Create an interactive 3D trajectory viewer with optional coloring.
+    Uses EKF-fused trajectory when available, falls back to raw GPS + WGS-84→ENU.
 
     Args:
-        data: Raw parsed log data
-        color_by: 'speed' or 'time' — how to color the trajectory
+        data: Raw parsed log data (may contain 'EKF' key with fused output)
+        color_by: 'speed', 'altitude', or 'time' — how to color the trajectory
 
     Returns:
         Plotly Figure object
     """
-    gps_data = data.get('GPS', [])
+    ekf = data.get('EKF')
+    source_label = "GPS"
 
-    if not gps_data:
-        fig = go.Figure()
-        fig.add_annotation(text="No GPS data available for 3D trajectory")
-        return fig
+    if ekf and ekf.get('east'):
+        # Use EKF-fused trajectory (NED → ENU for display)
+        east_list = ekf['east']
+        north_list = ekf['north']
+        up_list = ekf['up']
+        speeds = ekf['speed']
+        times = ekf['time_s']
+        source_label = "EKF-fused"
+    else:
+        # Fallback: raw GPS → ENU via flat-Earth
+        gps_data = data.get('GPS', [])
 
-    # Use first valid GPS fix as origin
-    lat0, lon0, alt0 = None, None, None
-    for msg in gps_data:
-        lat = msg.get('Lat', 0)
-        lon = msg.get('Lng', 0)
-        alt = msg.get('Alt', 0)
-        if lat != 0 and lon != 0:
-            lat0, lon0, alt0 = lat, lon, alt
-            break
+        if not gps_data:
+            fig = go.Figure()
+            fig.add_annotation(text="No GPS data available for 3D trajectory")
+            return fig
 
-    if lat0 is None:
-        fig = go.Figure()
-        fig.add_annotation(text="No valid GPS coordinates for 3D trajectory")
-        return fig
+        lat0, lon0, alt0 = None, None, None
+        for msg in gps_data:
+            lat = msg.get('Lat', 0)
+            lon = msg.get('Lng', 0)
+            alt = msg.get('Alt', 0)
+            if lat != 0 and lon != 0:
+                lat0, lon0, alt0 = lat, lon, alt
+                break
 
-    east_list = []
-    north_list = []
-    up_list = []
-    speeds = []
-    times = []
+        if lat0 is None:
+            fig = go.Figure()
+            fig.add_annotation(text="No valid GPS coordinates for 3D trajectory")
+            return fig
 
-    for msg in gps_data:
-        lat = msg.get('Lat', 0)
-        lon = msg.get('Lng', 0)
-        alt = msg.get('Alt', 0)
-        spd = msg.get('Spd', 0)
+        east_list = []
+        north_list = []
+        up_list = []
+        speeds = []
+        times = []
 
-        if lat == 0 or lon == 0:
-            continue
+        for msg in gps_data:
+            lat = msg.get('Lat', 0)
+            lon = msg.get('Lng', 0)
+            alt = msg.get('Alt', 0)
+            spd = msg.get('Spd', 0)
 
-        e, n, u = wgs84_to_enu(lat, lon, alt, lat0, lon0, alt0)
-        east_list.append(e)
-        north_list.append(n)
-        up_list.append(u)
-        speeds.append(spd)
-        times.append(msg['TimeS'])
+            if lat == 0 or lon == 0:
+                continue
+
+            e, n, u = wgs84_to_enu(lat, lon, alt, lat0, lon0, alt0)
+            east_list.append(e)
+            north_list.append(n)
+            up_list.append(u)
+            speeds.append(spd)
+            times.append(msg['TimeS'])
 
     if not east_list:
         fig = go.Figure()
-        fig.add_annotation(text="No valid GPS coordinates for 3D trajectory")
+        fig.add_annotation(text="No trajectory data available")
         return fig
-
     # Determine color scale
     if color_by == 'speed' and speeds:
         color_scale_vals = speeds
         colorbar_title = "Speed (m/s)"
+        colorscale = 'Viridis'
+    elif color_by == 'altitude' and up_list:
+        color_scale_vals = up_list
+        colorbar_title = "Altitude (m)"
         colorscale = 'Viridis'
     else:  # color by time
         color_scale_vals = times
         colorbar_title = "Time (s)"
         colorscale = 'Plasma'
 
+
     # Normalize color values to [0, 1]
     color_min = min(color_scale_vals)
     color_max = max(color_scale_vals)
     color_norm = [(v - color_min) / (color_max - color_min + 1e-6) for v in color_scale_vals]
 
+
     fig = go.Figure()
+
 
     # Main trajectory line
     fig.add_trace(go.Scatter3d(
@@ -655,6 +624,7 @@ def build_3d_trajectory(data: Dict, color_by: str = 'speed') -> go.Figure:
         hovertemplate='<b>Position</b><br>E: %{x:.1f}m<br>N: %{y:.1f}m<br>Alt: %{z:.1f}m<extra></extra>',
         name='Trajectory'
     ))
+
 
     # Scatter points for trajectory (with colorbar)
     fig.add_trace(go.Scatter3d(
@@ -672,27 +642,25 @@ def build_3d_trajectory(data: Dict, color_by: str = 'speed') -> go.Figure:
         name='Position'
     ))
 
-    # Start marker (green triangle)
-    if east_list and north_list and up_list:
-        fig.add_trace(go.Scatter3d(
-            x=[east_list[0]], y=[north_list[0]], z=[up_list[0]],
-            mode='markers',
-            marker=dict(size=12, color='green', symbol='diamond'),
-            name='Takeoff',
-            hovertemplate='<b>Takeoff</b><br>E: %{x:.1f}m<br>N: %{y:.1f}m<br>Alt: %{z:.1f}m<extra></extra>'
-        ))
+    # Start marker (green diamond)
+    fig.add_trace(go.Scatter3d(
+        x=[east_list[0]], y=[north_list[0]], z=[up_list[0]],
+        mode='markers',
+        marker=dict(size=12, color='green', symbol='diamond'),
+        name='Takeoff',
+        hovertemplate='<b>Takeoff</b><br>E: %{x:.1f}m<br>N: %{y:.1f}m<br>Alt: %{z:.1f}m<extra></extra>'
+    ))
 
-        # End marker (red triangle)
-        fig.add_trace(go.Scatter3d(
-            x=[east_list[-1]], y=[north_list[-1]], z=[up_list[-1]],
-            mode='markers',
-            marker=dict(size=12, color='red', symbol='diamond'),
-            name='Landing',
-            hovertemplate='<b>Landing</b><br>E: %{x:.1f}m<br>N: %{y:.1f}m<br>Alt: %{z:.1f}m<extra></extra>'
-        ))
-
+    # End marker (red diamond)
+    fig.add_trace(go.Scatter3d(
+        x=[east_list[-1]], y=[north_list[-1]], z=[up_list[-1]],
+        mode='markers',
+        marker=dict(size=12, color='red', symbol='diamond'),
+        name='Landing',
+        hovertemplate='<b>Landing</b><br>E: %{x:.1f}m<br>N: %{y:.1f}m<br>Alt: %{z:.1f}m<extra></extra>'
+    ))
     fig.update_layout(
-        title=f"3D Trajectory (colored by {color_by.title()})",
+        title=f"3D Trajectory — {source_label} (colored by {color_by.title()})",
         template="plotly_dark",
         scene=dict(
             xaxis=dict(title='East (m)', backgroundcolor='rgb(10, 10, 10)', gridcolor='rgb(50, 50, 50)'),
@@ -706,6 +674,7 @@ def build_3d_trajectory(data: Dict, color_by: str = 'speed') -> go.Figure:
         margin=dict(l=10, r=10, t=40, b=10),
         showlegend=True
     )
+
 
     return fig
 

@@ -1,32 +1,30 @@
-"""Warning when IMU gyro rates exceed a typical non-aerobatic flight envelope."""
+"""Warning generation services for mission metrics."""
+
+from __future__ import annotations
 
 import logging
 import math
 from typing import Dict, List, Optional, Tuple
 
-from services.constants import GYRO_EXTREME_WARN_DEG_S
+from service.common.constants import GYRO_EXTREME_WARN_DEG_S
 
 logger = logging.getLogger(__name__)
 
 _GYR_KEYS: Tuple[Tuple[str, str], ...] = (
-    ('GyrX', 'X'),
-    ('GyrY', 'Y'),
-    ('GyrZ', 'Z'),
+    ("GyrX", "X"),
+    ("GyrY", "Y"),
+    ("GyrZ", "Z"),
 )
 
 
 def compute_gyro_extremes_warning(imu_data: List[Dict]) -> Optional[str]:
-    """
-    Flag if any GyrX/Y/Z magnitude exceeds GYRO_EXTREME_WARN_DEG_S (compared in rad/s).
-
-    IMU gyro fields are in rad/s on typical ArduPilot logs.
-    """
+    """Warn when gyro rates exceed typical non-aerobatic flight range."""
     if not imu_data:
         return None
 
     lim_rad = math.radians(GYRO_EXTREME_WARN_DEG_S)
     max_abs = 0.0
-    max_axis = ''
+    max_axis = ""
     has_gyro = False
 
     for msg in imu_data:
@@ -52,13 +50,12 @@ def compute_gyro_extremes_warning(imu_data: List[Dict]) -> Optional[str]:
         "Gyro peak |ω| %.2f rad/s (%.0f°/s) on axis %s exceeds %.0f°/s.",
         max_abs,
         peak_deg,
-        max_axis or '?',
+        max_axis or "?",
         GYRO_EXTREME_WARN_DEG_S,
     )
 
     return (
-        f"Gyroscope Extremes: peak |ω| ≈ {peak_deg:.0f}°/s ({max_abs:.2f} rad/s) on Gyr{max_axis} — "
+        f"Gyroscope Extremes: peak |ω| ≈ {peak_deg:.0f}°/s ({max_abs:.2f} rad/s) on Gyr{max_axis} - "
         f"above ±{GYRO_EXTREME_WARN_DEG_S:.0f}°/s. Stable flight is usually well under 100°/s. "
-        "Possible aerobatics, crash/tumble, or prop-wash oscillation. "
-        "ОГО ви АКРОБАТ"
+        "Possible aerobatics, crash/tumble, or prop-wash oscillation."
     )
