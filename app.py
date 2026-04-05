@@ -28,6 +28,7 @@ from views.summary import render_summary
 from views.map import render_map
 from views.telemetry import render_panel_toolbar
 from views.ai_analysis import render_ai_analysis
+from views.export import render_export_panel
 
 
 # ============================================================================
@@ -170,6 +171,40 @@ def main():
                 energy_val = display_value(metrics.get("energy_used_mah"), default=0, format_str="{:.0f}")
                 st.metric("Energy", f"{energy_val} mAh" if energy_val != "N/A" else "N/A")
 
+            st.markdown("---")
+            st.markdown("### Quick Export")
+            
+            # Quick export buttons in sidebar
+            from service.export.csv_exporter import (
+                export_metrics_to_csv,
+                export_all_telemetry_to_csv,
+                generate_csv_filename,
+            )
+            
+            export_col1, export_col2 = st.columns(2)
+            
+            with export_col1:
+                metrics_csv = export_metrics_to_csv(metrics)
+                st.download_button(
+                    label="📊 Metrics CSV",
+                    data=metrics_csv.getvalue(),
+                    file_name=generate_csv_filename(prefix="metrics"),
+                    mime="text/csv",
+                    use_container_width=True,
+                    help="Download computed flight metrics"
+                )
+            
+            with export_col2:
+                telemetry_csv = export_all_telemetry_to_csv(data)
+                st.download_button(
+                    label="📤 All Data CSV",
+                    data=telemetry_csv.getvalue(),
+                    file_name=generate_csv_filename(prefix="telemetry_all"),
+                    mime="text/csv",
+                    use_container_width=True,
+                    help="Download all sensor telemetry data"
+                )
+
         inject_file_uploader_hide_add_button(
             uploaded_files is not None and len(uploaded_files) >= 2
         )
@@ -184,6 +219,8 @@ def main():
 
     if data is not None and metrics is not None:
         render_summary(metrics)
+        st.divider()
+        render_export_panel(data, metrics)
         st.divider()
         render_map(data, color_by)
         st.divider()
