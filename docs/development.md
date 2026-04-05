@@ -18,7 +18,7 @@ The primary UI is driven by `app.py`, which wires Streamlit page config, data lo
 
 ## Dependencies
 
-Runtime libraries are listed in `requirements.txt` (pymavlink, numpy, plotly, dash, streamlit, geopy, optional Google AI, python-dotenv). Documentation tooling is isolated in `requirements-docs.txt` so production installs do not require MkDocs.
+Runtime libraries are listed in `requirements.txt` (pymavlink, numpy, plotly, dash, streamlit, geopy, `google-genai`, `python-dotenv`). Documentation tooling is isolated in `requirements-docs.txt` so production installs do not require MkDocs.
 
 ## Tests and quality
 

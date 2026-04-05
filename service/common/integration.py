@@ -1,4 +1,10 @@
-"""Numerical integration helpers for IMU velocity estimation."""
+"""Numerical integration helpers for IMU velocity estimation.
+
+`integrate_velocity` applies the trapezoidal rule along each acceleration axis.
+`metrics.compute_metrics` passes IMU ``AccX``/``AccY``/``AccZ`` series and adds
+``+GRAVITY_MS2`` to ``AccZ`` before integrating, then derives ``max_imu_speed_ms``
+from the magnitude of the integrated velocity — a display metric, not an INS fix.
+"""
 
 from __future__ import annotations
 

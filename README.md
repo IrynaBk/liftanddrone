@@ -2,7 +2,7 @@
 
 A complete, production-ready Python application for analyzing ArduPilot Dataflash binary logs and rendering interactive mission analytics with 3D trajectory visualization.
 
-**Documentation:** full documentation yout can find there — [Run the service](https://irynabk.github.io/liftanddrone/run-service/).
+**Documentation:** full documentation — [Run the service](https://irynabk.github.io/liftanddrone/run-service/).
 
 ## Features
 
@@ -17,55 +17,46 @@ Computed in `service/metrics/metrics.py` (inputs prepared in `service/orchestrat
 - **Track distance**: Sum of **Haversine** segment lengths along the GPS path; segments faster than a plausibility cap are dropped; **distance warning** if the track fails that filter.
 - **Duration**: `mm:ss` from first to last GPS **`TimeS`** (or `N/A` without GPS).
 - **GPS speeds** (after `filter_gps_by_quality`): **max horizontal** (`Spd`), **max vertical** (`|VZ|`), **max 3D speed**, **mean satellite count**.
-- **IMU**: **Trapezoidal integration** of accelerations → **max IMU speed**; **max dynamic acceleration** = peak specific-force magnitude minus **gravity** (~9.81 m/s²).
+- **IMU**: **Max dynamic acceleration** = peak specific-force magnitude minus **gravity** (~9.81 m/s²). **Max IMU speed** = peak magnitude of velocity obtained by trapezoidal integration per axis, with **+g on the Z accelerometer component** before integrating (`compute_metrics` + `integrate_velocity`) — a rough display metric, not an INS velocity.
 - **Altitude** (median-smoothed GPS alt): **max**, **min**, **gain** (max − min), **takeoff alt** (first fix), **max above takeoff**; **altitude gain warning** on suspicious vertical steps.
 - **Battery**: **average current** and **energy used (mAh)** from the last **`CurrTot`** sample; message if BAT is absent.
 - **EKF** (when present in the log pipeline): peak **EKF** horizontal/vertical/total speeds.
 - **Gyro extremes** warning from IMU (vibration-style sanity check).
 
-### Streamlit Web UI (Modern Design)
-- **Responsive Sidebar**: File upload, display settings, quick stats
-- **Mission Summary**: 8 big-number stat cards in responsive 4x2 grid with color-coded accents
-- **2D Interactive Map**: 
-  - Real-world GPS trajectory with OpenStreetMap tiles
-  - Dynamic coloring by speed, altitude, or elapsed time
-  - Autocentric zoom to focus on flight area
-  - Takeoff/landing markers and mission bounds info
-- **Switchable Panels**: 
-  - Battery Health (voltage/current over time)
-  - Vibration & Motors (vibration levels + PWM outputs)
-  - Attitude Tracking (actual vs desired roll/pitch/yaw)
-  - Events Timeline (errors, mode changes, events)
-  - 3D Trajectory (local E-N-U coordinates)
-- **Dark Aerospace Theme**: IBM Plex Mono typography, intuitive color coding, professional design
+### Streamlit Web UI (`app.py`)
 
-### Interactive Dashboard (6 Panels)
+- **Sidebar**: Upload one or two `.bin` logs (radio pick when two), **Color trajectory by** (speed / altitude / time — drives the **2D map** and **3D trajectory** coloring), quick stats, firmware line when present.
+- **Mission Summary**: Ten stat cards (four columns) with optional metric notices in an expander.
+- **2D map**: OpenStreetMap tiles, trajectory colored from the sidebar, takeoff/landing markers, mission bounds (reverse geocoding via geopy where available).
+- **AI Flight Analysis**: Gemini text from computed metrics only (configure `GEMINI_API_KEY` in `.streamlit/secrets.toml` or paste a key in the UI); not part of the Dash app.
+- **Telemetry panels** (single switchable strip — same Plotly builders as Dash, imported from `drone_dashboard.py`): **Vibration & Motors**, **Attitude**, **Events**, **3D Trajectory**, **Battery**. There is **no** separate GPS Health chart in Streamlit; map + filtered GPS stats cover navigation context instead.
+- **Theming**: CSS under `ui/` plus `.streamlit/config.toml` (dark dashboard style).
 
-1. **Mission Summary Card**: Key-value metrics table with flight mode timeline
-2. **Battery Health**: Dual-axis chart (voltage left, current right) with low-voltage warnings
-3. **Vibration & Motor Outputs**: 
-   - Vibration levels (X, Y, Z) with warning/critical zones
-   - Motor PWM outputs with saturation highlighting
-4. **Attitude Tracking**: Overlay of actual vs desired roll, pitch, yaw
-5. **GPS Health**: Satellite count, HDOP, altitude profile, and fix type
-6. **Errors & Events Timeline**: Annotated scatter plot of flight anomalies
+### Legacy Dash dashboard (`drone_dashboard.py`)
+
+All panels are on **one scrollable page** (port **8050**), in this **top-to-bottom** order:
+
+1. **Mission Summary** — key metrics table and flight-mode timeline  
+2. **Battery** — dual-axis voltage/current with low-voltage styling  
+3. **Vibration & Motors** — vibration axes (with thresholds) and motor PWM  
+4. **Attitude** — actual vs desired roll/pitch/yaw  
+5. **GPS Health** — satellites, HDOP, altitude profile, fix type  
+6. **Events** — errors, mode changes, and events over time  
+7. **2D map** — trajectory with a **Color by** dropdown (speed / altitude / time)  
+8. **Mission bounds** — text block with takeoff/landing hints and GPS quality notes  
+9. **3D trajectory** — tabs for coloring by **speed** or **time** (Dash builds two figures; Streamlit uses one 3D view tied to the sidebar color mode, including altitude)
 
 ### 3D Trajectory Viewer
-- **WGS-84 to ENU Conversion**: Local E-N-U Cartesian coordinates relative to home
-- **Dynamic Coloring**:
-  - By speed (Viridis colorscale)
-  - By time elapsed (Plasma colorscale)
-- **Interactive Features**:
-  - Full 3D rotation, zoom, pan
-  - Takeoff (green) and landing (red) markers
-  - Color bar with units
-- **Hover Data**: Real-time position and velocity information
+- **WGS-84 to ENU**: Local **E–N–U** path (EKF-fused when available, else GPS-based), same helper as Dash/Streamlit.
+- **Dynamic coloring** (`build_3d_trajectory`): **Viridis** for speed or altitude, **Plasma** for time — in **Streamlit**, the choice matches **Color trajectory by** in the sidebar; **Dash** exposes separate tabs for speed vs time only.
+- **Interaction**: Rotate, zoom, pan; takeoff/landing markers; color bar with units; hover for position/velocity where Plotly provides it.
 
 ## Installation
 
 ### 1. Clone or download this repository
 ```bash
-cd uav_logs_analyzer
+git clone https://github.com/IrynaBk/liftanddrone.git
+cd liftanddrone
 ```
 
 ### 2. Create a virtual environment (recommended)
@@ -106,18 +97,14 @@ Static output is generated with `mkdocs build` into `site/` (gitignored).
 streamlit run app.py
 ```
 
-Opens at `http://localhost:8501` with:
-- **Sidebar**: File upload, display settings, quick stats
-- **Mission Summary**: 8 stat cards in big-number format
-- **2D Map**: Interactive real-world GPS trajectory (always visible)
-- **Telemetry Panels**: Switchable toolbar for Battery, Vibration, Attitude, Events, 3D Trajectory
+Opens at `http://localhost:8501` with the layout described above: **Mission Summary** → **2D map** → **AI Flight Analysis** → **Telemetry panels** (Vibration & Motors, Attitude, Events, 3D Trajectory, Battery).
 
 ### Legacy Dash Dashboard
 ```bash
 python drone_dashboard.py your_flight.bin
 ```
 
-Opens at `http://localhost:8050` with all panels visible at once (legacy layout).
+Opens at `http://localhost:8050` with the **nine stacked sections** listed under *Legacy Dash dashboard* (including GPS Health, 2D map, mission bounds, and 3D trajectory tabs).
 
 ### Export to Static HTML
 ```bash
@@ -184,6 +171,8 @@ drone_dashboard.py
 │   ├── build_attitude_panel()
 │   ├── build_gps_panel()
 │   ├── build_events_panel()
+│   ├── build_2d_map_panel()
+│   ├── build_mission_bounds_info()
 │   └── build_3d_trajectory()
 │
 ├── APPLICATION
@@ -200,6 +189,12 @@ drone_dashboard.py
 | **numpy** | Numerical computation & integration |
 | **plotly** | Interactive visualizations & 3D rendering |
 | **dash** | Web framework & dashboard layout |
+| **streamlit** | Modern web UI (`app.py`) |
+| **geopy** | Reverse geocoding for map / mission bounds |
+| **google-genai** | Gemini API (AI flight analysis) |
+| **python-dotenv** | Load `.env` at startup (optional local config) |
+
+For exact versions and constraints, see `requirements.txt`.
 
 ## Data Quality
 

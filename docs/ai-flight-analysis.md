@@ -10,7 +10,7 @@ The **AI Flight Analysis** block in the Streamlit app (`views/ai_analysis.py`) c
 |--------|------|
 | `views/ai_analysis.py` | Streamlit UI: API key, mode picker, button, result display, session cache |
 | `service/ai/flight_analysis.py` | Builds the metrics text block, picks system prompts, calls the Gemini API |
-| `google-generativeai` | Python client (see `requirements.txt`) |
+| `google-genai` (`import google.genai`) | Python client (see `requirements.txt`) |
 
 The legacy **Dash** app (`drone_dashboard.py`) does **not** include this feature.
 
@@ -18,7 +18,7 @@ The legacy **Dash** app (`drone_dashboard.py`) does **not** include this feature
 
 ## API key
 
-Set **`GEMINI_API_KEY`** in **`.streamlit/secrets.toml`** at the project root (Streamlit loads it; root-level keys are available to the app). If unset, the UI shows an expander where you can paste a key for the current session (password field). Keys are obtained from [Google AI Studio](https://aistudio.google.com/app/apikey).
+Set **`GEMINI_API_KEY`** in **`.streamlit/secrets.toml`** at the project root. The app also reads **`GEMINI_API_KEY`** from the process environment (`app.py` calls `load_dotenv()`, so a project-root **`.env`** may be used if you prefer). If unset, the UI shows an expander where you can paste a key for the current session (password field). Keys are obtained from [Google AI Studio](https://aistudio.google.com/app/apikey).
 
 Setup is described in [Run the service — step 4](run-service.md#4-enable-ai-flight-analysis-gemini).
 
