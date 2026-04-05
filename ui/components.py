@@ -1,7 +1,16 @@
 """Reusable UI components for the dashboard."""
 
+import html
 
-def stat_card(label: str, value: str, unit: str, icon: str, color: str) -> str:
+
+def stat_card(
+    label: str,
+    value: str,
+    unit: str,
+    icon: str,
+    color: str,
+    warning: str | None = None,
+) -> str:
     """
     Create a stat card HTML component for big-number display.
 
@@ -15,6 +24,17 @@ def stat_card(label: str, value: str, unit: str, icon: str, color: str) -> str:
     Returns:
         HTML string for the stat card
     """
+    warning_block = ""
+    if isinstance(warning, str):
+        cleaned = warning.strip()
+        # Ignore stray HTML-fragment artifacts from bad merge/template data.
+        if cleaned and cleaned not in {"</div>", "<div>"}:
+            warning_block = (
+                '<div style="font-size: 12px; color: #f59e0b; margin-top: 10px; line-height: 1.4;">'
+                f'⚠️ {html.escape(cleaned)}'
+                '</div>'
+            )
+
     return f"""
     <div style="
         background: #0f1117;
@@ -57,6 +77,7 @@ def stat_card(label: str, value: str, unit: str, icon: str, color: str) -> str:
             ">
                 {unit}
             </div>
+            {warning_block}
         </div>
     </div>
     """

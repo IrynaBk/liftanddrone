@@ -29,7 +29,8 @@ def render_summary(metrics: Dict) -> None:
             'value': f"{metrics.get('distance_km', 0):.2f}",
             'unit': 'km',
             'icon': '📍',
-            'color': '#34d399'
+            'color': '#34d399',
+            'warning': metrics.get('distance_warning'),
         },
         {
             'label': 'Max Total Speed',
@@ -57,7 +58,8 @@ def render_summary(metrics: Dict) -> None:
             'value': f"{metrics.get('alt_gain_m', 0):.0f}",
             'unit': 'meters',
             'icon': '🏔️',
-            'color': '#a78bfa'
+            'color': '#a78bfa',
+            'warning': metrics.get('alt_gain_warning'),
         },
         {
             'label': 'Max Acceleration',
@@ -71,7 +73,8 @@ def render_summary(metrics: Dict) -> None:
             'value': metric_value(metrics.get('energy_used_mah'), default=0, format_str="{:.0f}"),
             'unit': 'mAh',
             'icon': '🔋',
-            'color': '#fb923c'
+            'color': '#fb923c',
+            'warning': metrics.get('battery_warning'),
         },
         {
             'label': 'Avg GPS Satellites',
@@ -82,14 +85,29 @@ def render_summary(metrics: Dict) -> None:
         },
     ]
 
+    def _render_stat_card(card_data: Dict) -> None:
+        st.markdown(stat_card(**card_data), unsafe_allow_html=True)
+
     # Row 1: First 5 cards
     cols1 = st.columns(5, gap="small")
     for i, card_data in enumerate(cards[:5]):
         with cols1[i]:
-            st.markdown(stat_card(**card_data), unsafe_allow_html=True)
+            _render_stat_card(card_data)
 
     # Row 2: Remaining cards
     cols2 = st.columns(5, gap="small")
     for i, card_data in enumerate(cards[5:]):
         with cols2[i]:
-            st.markdown(stat_card(**card_data), unsafe_allow_html=True)
+            _render_stat_card(card_data)
+
+    notice_items = [(c['label'], c['warning']) for c in cards if c.get('warning')]
+    if metrics.get('gyro_extremes_warning'):
+        notice_items.append(('Gyroscope Extremes', metrics['gyro_extremes_warning']))
+    if notice_items:
+        with st.expander(
+            f"⚠️ Metric notices ({len(notice_items)})",
+            expanded=False,
+        ):
+            for label, msg in notice_items:
+                st.markdown(f"**{label}**")
+                st.warning(msg)
