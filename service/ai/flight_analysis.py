@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Dict
 
-import google.generativeai as genai
+import google.genai as genai
 
 
 _MODEL_NAME = "gemini-3-flash-preview"
@@ -121,17 +121,20 @@ def analyse_flight(api_key: str, metrics: Dict, mode: str = "detailed", custom_q
         Markdown report string.
 
     Raises:
-        google.generativeai.types.GoogleAPIError: on API failure.
+        google.genai.types.APIError: on API failure.
     """
     system_prompt, prompt_prefix = _PROMPTS.get(mode, _PROMPTS["detailed"])
 
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel(model_name=_MODEL_NAME, system_instruction=system_prompt)
+    client = genai.Client(api_key=api_key)
 
     if mode == "custom":
         prompt = f"{custom_question}\n\n{build_metrics_prompt(metrics)}"
     else:
         prompt = prompt_prefix + build_metrics_prompt(metrics)
 
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(
+        model=_MODEL_NAME,
+        contents=prompt,
+        config={"system_instruction": system_prompt}
+    )
     return response.text

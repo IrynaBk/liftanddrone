@@ -33,7 +33,7 @@ def render_ai_analysis(metrics: Dict, file_key: str = "") -> None:
     if _CACHE_KEY not in st.session_state:
         st.session_state[_CACHE_KEY] = {}
 
-    api_key: Optional[str] = os.environ.get("GEMINI_API_KEY") or ""
+    api_key: Optional[str] = st.secrets["GEMINI_API_KEY"] or ""
 
     if not api_key:
         with st.expander("Gemini API Key", expanded=True):
