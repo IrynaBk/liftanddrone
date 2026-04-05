@@ -89,6 +89,13 @@ def drone_spinner(message: str = "Processing flight data…"):
         placeholder.empty()
 
 
+def format_metric_value(value, default=0, format_str="{:.0f}") -> str:
+    """Format a metric value or return 'N/A' if missing/default."""
+    if value is None or value == default:
+        return "N/A"
+    return format_str.format(value)
+
+
 def stat_card(
     label: str,
     value: str,
