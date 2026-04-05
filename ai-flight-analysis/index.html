@@ -744,8 +744,8 @@
 <p>The legacy <strong>Dash</strong> app (<code>drone_dashboard.py</code>) does <strong>not</strong> include this feature.</p>
 <hr />
 <h2 id="api-key">API key<a class="headerlink" href="#api-key" title="Permanent link">&para;</a></h2>
-<p>The app reads <strong><code>GEMINI_API_KEY</code></strong> from the environment (<code>python-dotenv</code> loads <code>.env</code> at startup). If unset, the UI shows an expander where you can paste a key for the current session (password field). Keys are obtained from <a href="https://aistudio.google.com/app/apikey">Google AI Studio</a>.</p>
-<p>Setup options are described in <a href="../run-service/#4-optional-enable-ai-flight-analysis">Run the service — step 4</a>.</p>
+<p>Set <strong><code>GEMINI_API_KEY</code></strong> in <strong><code>.streamlit/secrets.toml</code></strong> at the project root (Streamlit loads it; root-level keys are available to the app). If unset, the UI shows an expander where you can paste a key for the current session (password field). Keys are obtained from <a href="https://aistudio.google.com/app/apikey">Google AI Studio</a>.</p>
+<p>Setup is described in <a href="../run-service/#4-enable-ai-flight-analysis-gemini">Run the service — step 4</a>.</p>
 <hr />
 <h2 id="model">Model<a class="headerlink" href="#model" title="Permanent link">&para;</a></h2>
 <p>The service uses a single model id:</p>
@@ -810,7 +810,7 @@
 <h2 id="related">Related<a class="headerlink" href="#related" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="../functionality/">Functionality</a> — where AI fits in the Streamlit layout  </li>
-<li><a href="../run-service/">Run the service</a> — environment and <code>.env</code> for local runs  </li>
+<li><a href="../run-service/">Run the service</a> — <code>secrets.toml</code> and running Streamlit locally  </li>
 </ul>
 
 

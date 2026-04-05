@@ -411,10 +411,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-optional-enable-ai-flight-analysis" class="md-nav__link">
+  <a href="#4-enable-ai-flight-analysis-gemini" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. (Optional) Enable AI flight analysis
+        4. Enable AI flight analysis (Gemini)
       
     </span>
   </a>
@@ -641,10 +641,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#4-optional-enable-ai-flight-analysis" class="md-nav__link">
+  <a href="#4-enable-ai-flight-analysis-gemini" class="md-nav__link">
     <span class="md-ellipsis">
       
-        4. (Optional) Enable AI flight analysis
+        4. Enable AI flight analysis (Gemini)
       
     </span>
   </a>
@@ -755,17 +755,13 @@ pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </s
 </code></pre></div>
 <p>Wait until the install finishes without errors.</p>
 <hr />
-<h2 id="4-optional-enable-ai-flight-analysis">4. (Optional) Enable AI flight analysis<a class="headerlink" href="#4-optional-enable-ai-flight-analysis" title="Permanent link">&para;</a></h2>
-<p>The <strong>AI Flight Analysis</strong> section uses Google Gemini. You can:</p>
-<ul>
-<li>Set an environment variable <strong><code>GEMINI_API_KEY</code></strong> before starting Streamlit, or  </li>
-<li>Create a <strong><code>.env</code></strong> file in the project root (same folder as <code>app.py</code>) — the app loads it via <code>python-dotenv</code>:</li>
-</ul>
-<div class="highlight"><pre><span></span><code><span class="c1"># .env — do not commit real keys to git</span>
-<span class="nv">GEMINI_API_KEY</span><span class="o">=</span>your_key_here
+<h2 id="4-enable-ai-flight-analysis-gemini">4. Enable AI flight analysis (Gemini)<a class="headerlink" href="#4-enable-ai-flight-analysis-gemini" title="Permanent link">&para;</a></h2>
+<p>The <strong>AI Flight Analysis</strong> section uses Google Gemini. Set <strong><code>GEMINI_API_KEY</code></strong> in <strong><code>.streamlit/secrets.toml</code></strong> at the project root (create the <code>.streamlit</code> folder if needed):</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># .streamlit/secrets.toml — do not commit real keys to git</span>
+<span class="n">GEMINI_API_KEY</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;your_key_here&quot;</span>
 </code></pre></div>
 <p>Get a key from <a href="https://aistudio.google.com/app/apikey">Google AI Studio</a>.<br />
-If you skip this step, the rest of the dashboard still works; only AI analysis stays disabled until you add a key in the UI or environment.</p>
+If this key is missing, the rest of the dashboard still works; you can paste a key in the sidebar for the current session, or add it in <code>secrets.toml</code> as above.</p>
 <hr />
 <h2 id="5-start-the-streamlit-app">5. Start the Streamlit app<a class="headerlink" href="#5-start-the-streamlit-app" title="Permanent link">&para;</a></h2>
 <p>From the <strong>repository root</strong> (<code>liftanddrone/</code>, where <code>app.py</code> lives):</p>
@@ -813,7 +809,7 @@ If you skip this step, the rest of the dashboard still works; only AI analysis s
 </tr>
 <tr>
 <td>AI section asks for a key</td>
-<td>Set <code>GEMINI_API_KEY</code> or add it in the sidebar / <code>.env</code>.</td>
+<td>Set <code>GEMINI_API_KEY</code> in <code>.streamlit/secrets.toml</code> or paste a key in the sidebar.</td>
 </tr>
 <tr>
 <td>Blank or broken page</td>

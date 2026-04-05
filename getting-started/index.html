@@ -412,10 +412,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#optional-gemini-api-ai-flight-analysis" class="md-nav__link">
+  <a href="#gemini-api-ai-flight-analysis" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Optional: Gemini API (AI flight analysis)
+        Gemini API (AI flight analysis)
       
     </span>
   </a>
@@ -664,10 +664,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#optional-gemini-api-ai-flight-analysis" class="md-nav__link">
+  <a href="#gemini-api-ai-flight-analysis" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Optional: Gemini API (AI flight analysis)
+        Gemini API (AI flight analysis)
       
     </span>
   </a>
@@ -708,7 +708,7 @@
 <h1 id="getting-started">Getting started<a class="headerlink" href="#getting-started" title="Permanent link">&para;</a></h1>
 <div class="admonition info">
 <p class="admonition-title">Step-by-step walkthrough</p>
-<p>For a full numbered guide (clone → venv → install → optional AI key → run → use the UI), see <strong><a href="../run-service/">Run the service</a></strong>.</p>
+<p>For a full numbered guide (clone → venv → install → Gemini key in <code>secrets.toml</code> → run → use the UI), see <strong><a href="../run-service/">Run the service</a></strong>.</p>
 </div>
 <h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">&para;</a></h2>
 <ul>
@@ -731,8 +731,12 @@ pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </s
 <h3 id="export-static-html-dash">Export static HTML (Dash)<a class="headerlink" href="#export-static-html-dash" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code>python<span class="w"> </span>drone_dashboard.py<span class="w"> </span>your_flight.bin<span class="w"> </span>--export<span class="w"> </span>report.html
 </code></pre></div>
-<h2 id="optional-gemini-api-ai-flight-analysis">Optional: Gemini API (AI flight analysis)<a class="headerlink" href="#optional-gemini-api-ai-flight-analysis" title="Permanent link">&para;</a></h2>
-<p>Set <strong><code>GEMINI_API_KEY</code></strong> (environment variable or <code>.env</code> in the project root). See <a href="../run-service/#4-optional-enable-ai-flight-analysis">Run the service — step 4</a>.</p>
+<h2 id="gemini-api-ai-flight-analysis">Gemini API (AI flight analysis)<a class="headerlink" href="#gemini-api-ai-flight-analysis" title="Permanent link">&para;</a></h2>
+<p>Configure <strong><code>GEMINI_API_KEY</code></strong> in <strong><code>.streamlit/secrets.toml</code></strong> at the project root (same level as <code>app.py</code>). Streamlit loads this file; do not commit real keys to git.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># .streamlit/secrets.toml</span>
+<span class="n">GEMINI_API_KEY</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;your_key_here&quot;</span>
+</code></pre></div>
+<p>See <a href="../run-service/#4-enable-ai-flight-analysis-gemini">Run the service — step 4</a>.</p>
 <h2 id="build-this-documentation-site">Build this documentation site<a class="headerlink" href="#build-this-documentation-site" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements-docs.txt
 mkdocs<span class="w"> </span>serve
