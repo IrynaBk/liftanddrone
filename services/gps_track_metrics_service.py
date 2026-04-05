@@ -10,13 +10,16 @@ logger = logging.getLogger(__name__)
 
 # Heuristic bounds for warning logs only (not validation).
 _MAX_PLAUSIBLE_ALT_GAIN_WARN_M = 1200.0
+# Raw Alt between consecutive GPS samples; larger jumps suggest GPS alt noise, not real motion.
+_MAX_PLAUSIBLE_ALT_DELTA_PER_SAMPLE_M = 10.0
 
 
 def compute_gps_track_metrics(gps_data: List[Dict]) -> Dict[str, Any]:
     """
     Horizontal distance (plausible segments only), smoothed altitude extrema, and gain.
 
-    Keys: distance_m, max_alt_m, min_alt_m, alt_gain_m; optional alt_gain_warning,
+    Keys: distance_m, max_alt_m, min_alt_m, alt_gain_m; optional alt_gain_warning
+    (includes implausible gain, max alt, and inter-sample altitude jumps),
     distance_warning (user-facing strings for the UI).
     """
     out: Dict[str, Any] = {
@@ -60,6 +63,14 @@ def compute_gps_track_metrics(gps_data: List[Dict]) -> Dict[str, Any]:
     out['min_alt_m'] = float(min(alt_smooth)) if alt_smooth else 0.0
     out['alt_gain_m'] = out['max_alt_m'] - out['min_alt_m']
 
+    max_abs_alt_delta_m = 0.0
+    if len(altitudes) > 1:
+        for i in range(1, len(altitudes)):
+            a0, a1 = altitudes[i - 1], altitudes[i]
+            if a0 == 0 or a1 == 0:
+                continue
+            max_abs_alt_delta_m = max(max_abs_alt_delta_m, abs(a1 - a0))
+
     n = len(gps_records)
     alt_msgs: List[str] = []
 
@@ -90,6 +101,17 @@ def compute_gps_track_metrics(gps_data: List[Dict]) -> Dict[str, Any]:
         )
         alt_msgs.append(
             f"Max altitude ({out['max_alt_m']:.0f} m) looks implausible; GPS altitude may be unreliable."
+        )
+
+    if max_abs_alt_delta_m > _MAX_PLAUSIBLE_ALT_DELTA_PER_SAMPLE_M:
+        logger.warning(
+            "GPS track: consecutive Alt delta %.1f m exceeds ±%.1f m per sample; likely GPS alt noise.",
+            max_abs_alt_delta_m,
+            _MAX_PLAUSIBLE_ALT_DELTA_PER_SAMPLE_M,
+        )
+        alt_msgs.append(
+            f"Altitude jumps: largest step between consecutive GPS samples is {max_abs_alt_delta_m:.1f} m "
+            f"(limit ±{_MAX_PLAUSIBLE_ALT_DELTA_PER_SAMPLE_M:.0f} m). Likely GPS altitude noise, not real vertical motion."
         )
 
     if alt_msgs:

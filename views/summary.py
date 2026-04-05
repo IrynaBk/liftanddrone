@@ -47,9 +47,9 @@ def render_summary(metrics: Dict) -> None:
             'color': '#f59e0b'
         },
         {
-            'label': 'Max Altitude Gain(over the sea level)',
+            'label': 'Max Altitude Gain',
             'value': f"{metrics.get('alt_gain_m', 0):.0f}",
-            'unit': 'meters',
+            'unit': 'meters above sea level',
             'icon': '🏔️',
             'color': '#a78bfa',
             'warning': metrics.get('alt_gain_warning'),
@@ -66,7 +66,8 @@ def render_summary(metrics: Dict) -> None:
             'value': metric_value(metrics.get('energy_used_mah'), default=0, format_str="{:.0f}"),
             'unit': 'mAh',
             'icon': '🔋',
-            'color': '#fb923c'
+            'color': '#fb923c',
+            'warning': metrics.get('battery_warning'),
         },
         {
             'label': 'Avg GPS Satellites',
@@ -94,6 +95,8 @@ def render_summary(metrics: Dict) -> None:
             _render_stat_card(card_data)
 
     notice_items = [(c['label'], c['warning']) for c in cards if c.get('warning')]
+    if metrics.get('gyro_extremes_warning'):
+        notice_items.append(('Gyroscope Extremes', metrics['gyro_extremes_warning']))
     if notice_items:
         with st.expander(
             f"⚠️ Metric notices ({len(notice_items)})",

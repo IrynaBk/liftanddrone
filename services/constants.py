@@ -14,6 +14,9 @@ MAX_HDOP = 2.5  # Maximum HDOP for valid fix
 _ALT_MEDIAN_K = 7  # median filter window (odd, capped by track length)
 _MAX_PLAUSIBLE_H_SPEED = 200.0  # m/s; reject GPS segments implying higher horizontal speed
 
+# IMU gyro (rad/s in log); warn if |Gyr| exceeds this rate (typical cruise << 100°/s)
+GYRO_EXTREME_WARN_DEG_S = 500.0
+
 # Message types to extract
 MESSAGE_TYPES = [
     'ATT', 'GPS', 'BAT', 'VIBE', 'RCOU', 'RCIN', 'IMU', 'MODE', 'ERR', 'MSG', 'EV', 'BARO'
