@@ -30,13 +30,20 @@ def render_ai_analysis(metrics: Dict, file_key: str = "") -> None:
     Args:
         metrics:  flight metrics dict from compute_metrics().
         file_key: stable id for the current log file (sig_key + active_idx).
+                  Used to cache and restore analysis results per file.
     """
     st.markdown("### AI Flight Analysis")
 
+    # Ensure cache dict exists
     if _CACHE_KEY not in st.session_state:
         st.session_state[_CACHE_KEY] = {}
 
-    api_key: Optional[str] = os.environ.get("GEMINI_API_KEY") or ""
+    api_key: Optional[str] = (os.environ.get("GEMINI_API_KEY") or "").strip()
+    if not api_key:
+        try:
+            api_key = (st.secrets["GEMINI_API_KEY"] or "").strip()
+        except Exception:
+            api_key = ""
 
     if not api_key:
         with st.expander("Gemini API Key", expanded=True):

@@ -1,0 +1,53 @@
+site_name: Lift & Drone
+site_description: UAV telemetry analysis and interactive dashboards for ArduPilot Dataflash logs
+site_author: Lift & Drone contributors
+
+repo_name: IrynaBk/liftanddrone
+repo_url: https://github.com/IrynaBk/liftanddrone
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.expand
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+  palette:
+    - scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: Switch to light mode
+    - scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Switch to dark mode
+
+extra_css:
+  - stylesheets/extra.css
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting started: getting-started.md
+  - Run the service: run-service.md
+  - Functionality: functionality.md
+  - AI flight analysis: ai-flight-analysis.md
+  - Why math works: why-math.md
+  - Development: development.md
